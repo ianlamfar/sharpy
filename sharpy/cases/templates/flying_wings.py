@@ -787,6 +787,7 @@ class FlyingWing():
         if os.path.isfile(rom_file):
             os.remove(rom_file)
 
+
 class Smith(FlyingWing):
     '''
     Build Smith HALE wing.
@@ -1074,6 +1075,7 @@ class GolandControlSurface(Goland):
             u = h5file.create_dataset(
                 'u', data=input_vec)
 
+
 class QuasiInfinite(FlyingWing):
     '''
     Builds a very high aspect ratio wing, for simulating 2D aerodynamics
@@ -1135,6 +1137,7 @@ class QuasiInfinite(FlyingWing):
         self.mass[0, :, :] = np.diag([m_unit, m_unit, m_unit, 1., .5, .5])
         self.elem_stiffness = np.zeros((self.num_elem_tot,), dtype=int)
         self.elem_mass = np.zeros((self.num_elem_tot,), dtype=int)
+
 
 class Pazy(FlyingWing):
     '''
@@ -1293,7 +1296,6 @@ class Pazy(FlyingWing):
             self.lumped_mass_position[1] = np.array([-0.005, -0.005, 0])  # positive x now ascending towards root
             self.lumped_mass_nodes[1] = self.N // 2 + 1
             self.lumped_mass_inertia[1, :, :] = np.diag([1.2815E-04, 2.87E-07, 1.17E-04])
-
 
 
 class PazyControlSurface(Pazy):
