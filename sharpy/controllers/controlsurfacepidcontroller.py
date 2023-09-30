@@ -238,12 +238,14 @@ class ControlSurfacePidController(controller_interface.BaseController):
         output_cap = self.settings['output_limit']
         cap = 0
         if output_cap != -1 and abs(control_command) >= abs(output_cap):
-            if control_command < 0:
-                control_command = - abs(output_cap)
-                cap = -1
-            elif control_command > 0:
-                control_command = abs(output_cap)
-                cap = 1
+            # if control_command < 0:
+            #     control_command = - abs(output_cap)
+            #     cap = -1
+            # elif control_command > 0:
+            #     control_command = abs(output_cap)
+            #     cap = 1
+            cap = np.sign(control_command)
+            control_command = cap * abs(output_cap)
 
         controlled_state['aero'].control_surface_deflection = (
             np.array(self.settings['controlled_surfaces_coeff']) * control_command)
@@ -269,16 +271,13 @@ class ControlSurfacePidController(controller_interface.BaseController):
         if self.settings['input_type'] == 'pitch':
             step = controlled_state['structural']
             euler = step.euler_angles()
-
             output = euler[1]
         elif self.settings['input_type'] == 'tip rotation':
             step = controlled_state['structural']
-
             output = step.psi[-1, -1, 1]
         elif self.settings['input_type'] == 'roll':
             step = controlled_state['structural']
             euler = step.euler_angles()
-
             output = euler[0]
         elif 'pos_z(' in self.settings['input_type']:
             node_str = self.settings['input_type']
@@ -287,8 +286,13 @@ class ControlSurfacePidController(controller_interface.BaseController):
             node = int(node_str)
             step = controlled_state['structural']
             pos = step.pos[node, :]
-
             output = pos[2]
+        elif self.settings['input_type'] == 'tip_strain_int':
+            sstep = controlled_state['structural']
+            astep = controlled_state['aero']
+            pass
+        elif self.settings['input_type'] == 'tip_strain_dot_int':
+            pass
         else:
             raise NotImplementedError(
                 "input_type {} is not yet implemented in extract_time_history()"
