@@ -271,7 +271,7 @@ def generate_naca_camber(M=0, P=0):
 
 
 def generate_solver_file(horseshoe=False):
-    import sharpy.utils.algebra as algebra
+    import sharpy_control.utils.algebra as algebra
     file_name = route + '/' + case_name + '.sharpy'
     # config = configparser.ConfigParser()
     import configobj

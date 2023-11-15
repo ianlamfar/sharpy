@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import unittest
-import sharpy.cases.templates.flying_wings as wings
-import sharpy.sharpy_main
+import sharpy_control.cases.templates.flying_wings as wings
+import sharpy_control.sharpy_main
 
 # Problem Set up
 def generate_pazy_udp(u_inf, case_name, output_folder='/output/', cases_folder='', **kwargs):
@@ -308,7 +308,7 @@ def generate_pazy_udp(u_inf, case_name, output_folder='/output/', cases_folder='
 
     ws.config.write()
 
-    sharpy.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
+    sharpy_control.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
 
 if __name__== '__main__':
     # u_inf = 1

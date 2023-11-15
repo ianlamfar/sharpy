@@ -2,10 +2,10 @@ import h5py as h5
 import numpy as np
 import configparser
 import os
-import sharpy.utils.algebra as algebra
+import sharpy_control.utils.algebra as algebra
 # Generate errors during execution
 import sys
-import sharpy.utils.cout_utils as cout
+import sharpy_control.utils.cout_utils as cout
 
 
 case_name = 'bielawa_baromega2_1e3'

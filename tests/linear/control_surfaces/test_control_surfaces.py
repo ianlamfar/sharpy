@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import unittest
-import sharpy.cases.templates.flying_wings as wings
-import sharpy.sharpy_main
+import sharpy_control.cases.templates.flying_wings as wings
+import sharpy_control.sharpy_main
 import pickle
 
 
@@ -219,7 +219,7 @@ class TestGolandControlSurface(unittest.TestCase):
 
         restart = False # useful for debugging to load pickle
         if not restart:
-            self.data = sharpy.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
+            self.data = sharpy_control.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
         else:
             with open(self.route_test_dir + '/output/' + ws.case_name + '.pkl', 'rb') as f:
                 self.data = pickle.load(f)

@@ -1,7 +1,7 @@
 import numpy as np
-import sharpy.cases.templates.flying_wings as wings
-import sharpy.utils.algebra as algebra
-import sharpy.sharpy_main
+import sharpy_control.cases.templates.flying_wings as wings
+import sharpy_control.utils.algebra as algebra
+import sharpy_control.sharpy_main
 
 
 def generate_infinite_wing(case_name, alpha, **kwargs):
@@ -174,7 +174,7 @@ def generate_infinite_wing(case_name, alpha, **kwargs):
 
     wing.settings_to_config(settings)
 
-    sharpy.sharpy_main.main(['', f'{case_route}/{case_name}.sharpy'])
+    sharpy_control.sharpy_main.main(['', f'{case_route}/{case_name}.sharpy'])
 
     return wing
 

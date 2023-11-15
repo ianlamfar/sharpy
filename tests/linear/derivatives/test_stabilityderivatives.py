@@ -1,12 +1,12 @@
 import numpy as np
 import os
 import unittest
-import sharpy.cases.templates.flying_wings as wings
-import sharpy.sharpy_main
+import sharpy_control.cases.templates.flying_wings as wings
+import sharpy_control.sharpy_main
 import h5py
-import sharpy.utils.h5utils as h5utils
-import sharpy.utils.algebra as algebra
-import sharpy.linear.src.libss as libss
+import sharpy_control.utils.h5utils as h5utils
+import sharpy_control.utils.algebra as algebra
+import sharpy_control.linear.src.libss as libss
 
 
 class TestLinearDerivatives(unittest.TestCase):
@@ -278,7 +278,7 @@ class TestLinearDerivatives(unittest.TestCase):
         ws.config.write()
 
         if not not_run:
-            self.data = sharpy.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
+            self.data = sharpy_control.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
 
         return ws
 

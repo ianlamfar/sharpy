@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import unittest
-import sharpy.cases.templates.flying_wings as wings
-import sharpy.sharpy_main
+import sharpy_control.cases.templates.flying_wings as wings
+import sharpy_control.sharpy_main
 
 
 class TestROMFramework(unittest.TestCase):
@@ -236,7 +236,7 @@ class TestROMFramework(unittest.TestCase):
                 self.ws.config['LinearAssembler']['linear_system_settings']['aero_settings']['rom_method_settings'] = \
                     rom_settings
                 self.ws.config.write()
-                sharpy.sharpy_main.main(['', self.ws.route + self.ws.case_name + '.sharpy'])
+                sharpy_control.sharpy_main.main(['', self.ws.route + self.ws.case_name + '.sharpy'])
 
     def tearDown(self):
         import shutil

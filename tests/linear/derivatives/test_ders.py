@@ -6,9 +6,9 @@ S. Maraniello, 4 Jun 2018
 import numpy as np
 import unittest
 
-import sharpy.aero.utils.uvlmlib
-import sharpy.linear.src.lib_dbiot as dbiot
-import sharpy.linear.src.uvlmutils as uvlmutils
+import sharpy_control.aero.utils.uvlmlib
+import sharpy_control.linear.src.lib_dbiot as dbiot
+import sharpy_control.linear.src.uvlmutils as uvlmutils
 
 
 vortex_radius = 1e-6
@@ -140,7 +140,7 @@ class Test_ders(unittest.TestCase):
                                                      vortex_radius, gamma)
         DerP_an3, DerVer_an3 = dbiot.eval_panel_fast(zetaP, ZetaPanel,
                                                      vortex_radius, gamma)
-        DerP_an4, DerVer_an4 = sharpy.aero.utils.uvlmlib.eval_panel_cpp(zetaP, ZetaPanel,
+        DerP_an4, DerVer_an4 = sharpy_control.aero.utils.uvlmlib.eval_panel_cpp(zetaP, ZetaPanel,
                                                                         vortex_radius,
                                                                         gamma)
 
@@ -221,7 +221,7 @@ class Test_ders(unittest.TestCase):
                                                      vortex_radius, gamma)
         DerP_an3, DerVer_an3 = dbiot.eval_panel_fast(zetaP, ZetaPanel,
                                                      vortex_radius, gamma)
-        DerP_an4, DerVer_an4 = sharpy.aero.utils.uvlmlib.eval_panel_cpp(zetaP, ZetaPanel,
+        DerP_an4, DerVer_an4 = sharpy_control.aero.utils.uvlmlib.eval_panel_cpp(zetaP, ZetaPanel,
                                                                         vortex_radius,
                                                                         gamma)
 

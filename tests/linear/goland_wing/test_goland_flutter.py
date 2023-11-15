@@ -1,8 +1,8 @@
 import numpy as np
 import os
 import unittest
-import sharpy.cases.templates.flying_wings as wings
-import sharpy.sharpy_main
+import sharpy_control.cases.templates.flying_wings as wings
+import sharpy_control.sharpy_main
 
 
 class TestGolandFlutter(unittest.TestCase):
@@ -227,7 +227,7 @@ class TestGolandFlutter(unittest.TestCase):
 
         ws.config.write()
 
-        self.data = sharpy.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
+        self.data = sharpy_control.sharpy_main.main(['', ws.route + ws.case_name + '.sharpy'])
 
     def run_rom_stable(self):
         ssrom = self.data.linear.linear_system.uvlm.rom['Krylov'].ssrom

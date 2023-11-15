@@ -3,9 +3,9 @@ import numpy as np
 import os
 import shutil
 
-import sharpy.utils.generate_cases as gc
-import sharpy.cases.templates.template_wt as template_wt
-from sharpy.utils.constants import deg2rad
+import sharpy_control.utils.generate_cases as gc
+import sharpy_control.cases.templates.template_wt as template_wt
+from sharpy_control.utils.constants import deg2rad
 
 
 class TestGenerateCases(unittest.TestCase):
@@ -185,10 +185,10 @@ class TestGenerateCases(unittest.TestCase):
 
     def test_generatecases(self):
 
-        import sharpy.sharpy_main
+        import sharpy_control.sharpy_main
 
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/' + case +'.sharpy')
-        sharpy.sharpy_main.main(['', solver_path])
+        sharpy_control.sharpy_main.main(['', solver_path])
 
     def tearDown(self):
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))

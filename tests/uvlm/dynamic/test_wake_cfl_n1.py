@@ -4,8 +4,8 @@ import sys
 import unittest
 # import shutil
 
-import sharpy.utils.generate_cases as gc
-import sharpy.sharpy_main
+import sharpy_control.utils.generate_cases as gc
+import sharpy_control.sharpy_main
 
 # maths
 deg2rad = np.pi/180.
@@ -186,7 +186,7 @@ class TestWakeCFLn1(unittest.TestCase):
        
         SimInfo.solvers['BeamLoader']['unsteady'] = 'on'
 
-        import sharpy.utils.generator_interface as gi
+        import sharpy_control.utils.generator_interface as gi
         if case_header == 'traditional' or case_header == 'statespace_cfl1':
 
             SimInfo.solvers['AerogridLoader']['wake_shape_generator'] = 'StraightWake'
@@ -388,7 +388,7 @@ class TestWakeCFLn1(unittest.TestCase):
         
         case, route = self.generate_files(case_header, airfoil)
         sharpy_file = route + case + '.sharpy'
-        sharpy_output = sharpy.sharpy_main.main(['', sharpy_file])
+        sharpy_output = sharpy_control.sharpy_main.main(['', sharpy_file])
         
         lift = sharpy_output.structure.timestep_info[-1].steady_applied_forces[self.nodes_AR//2, 2]
         lift += sharpy_output.structure.timestep_info[-1].unsteady_applied_forces[self.nodes_AR//2, 2]
@@ -429,7 +429,7 @@ class TestWakeCFLn1(unittest.TestCase):
 
         case, route = self.generate_files(case_header, airfoil)
         sharpy_file = route + case + '.sharpy'
-        return sharpy.sharpy_main.main(['', sharpy_file])
+        return sharpy_control.sharpy_main.main(['', sharpy_file])
 
     @classmethod
     def tearDownClass(cls):

@@ -1,8 +1,8 @@
 import numpy as np
-import sharpy.utils.algebra as algebra
-import sharpy.sharpy_main as smain
+import sharpy_control.utils.algebra as algebra
+import sharpy_control.sharpy_main as smain
 import unittest
-import sharpy.cases.templates.flying_wings as wings
+import sharpy_control.cases.templates.flying_wings as wings
 import os
 import shutil
 

@@ -2,7 +2,7 @@
 import h5py as h5
 import numpy as np
 import os
-import sharpy.utils.algebra as algebra
+import sharpy_control.utils.algebra as algebra
 
 case_name = 'hale'
 route = os.path.dirname(os.path.realpath(__file__)) + '/'

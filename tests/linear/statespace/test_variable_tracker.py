@@ -1,9 +1,9 @@
 import unittest
 import os
 import h5py
-import sharpy.utils.h5utils as h5utils
+import sharpy_control.utils.h5utils as h5utils
 
-from sharpy.linear.utils.ss_interface import InputVariable, LinearVector, OutputVariable
+from sharpy_control.linear.utils.ss_interface import InputVariable, LinearVector, OutputVariable
 
 
 class TestVariables(unittest.TestCase):

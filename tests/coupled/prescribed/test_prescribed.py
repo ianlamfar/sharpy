@@ -5,7 +5,7 @@ import numpy as np
 import importlib
 import unittest
 import os
-import sharpy.utils.cout_utils as cout
+import sharpy_control.utils.cout_utils as cout
 
 
 @unittest.skip('Placeholder - No test yet to run')

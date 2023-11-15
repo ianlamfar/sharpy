@@ -4,9 +4,9 @@ import os
 
 import numpy as np
 
-from sharpy.linear.src import libsparse as libsp
-from sharpy.linear.src.libss import StateSpace, SSconv, compare_ss, scale_SS, Gain, random_ss, couple, join, disc2cont, series
-from sharpy.linear.utils.ss_interface import LinearVector, InputVariable, StateVariable, OutputVariable
+from sharpy_control.linear.src import libsparse as libsp
+from sharpy_control.linear.src.libss import StateSpace, SSconv, compare_ss, scale_SS, Gain, random_ss, couple, join, disc2cont, series
+from sharpy_control.linear.utils.ss_interface import LinearVector, InputVariable, StateVariable, OutputVariable
 
 
 class Test_dlti(unittest.TestCase):

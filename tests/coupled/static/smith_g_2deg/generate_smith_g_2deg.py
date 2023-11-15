@@ -4,7 +4,7 @@ import configparser
 import os
 np.set_printoptions(precision=16)
 
-import sharpy.utils.algebra as algebra
+import sharpy_control.utils.algebra as algebra
 
 case_name = 'smith_g_2deg'
 route = os.path.dirname(os.path.realpath(__file__)) + '/'

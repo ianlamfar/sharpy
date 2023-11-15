@@ -3,7 +3,7 @@ import numpy as np
 import configparser
 import os
 
-import sharpy.utils.algebra as algebra
+import sharpy_control.utils.algebra as algebra
 
 case_name = 'rotating_wing'
 route = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -379,8 +379,9 @@ def generate_solver_file(horseshoe=False):
                                  # 'PrescribedUvlm',
                                  'AerogridPlot',
                                  # 'NonLinearDynamic',
-                                 'BeamPlot',]
-                                 # 'AeroForcesCalculator',],
+                                 'BeamPlot',
+                                 # 'AeroForcesCalculator',
+                                 ],
                         'write_screen': 'off',
                         'write_log': 'on',
                         'log_folder': route + '/output/',
@@ -497,10 +498,11 @@ def generate_solver_file(horseshoe=False):
                                     'aligned_grid': 'on',
                                     'mstar': 150,
                                     'freestream_dir': ['1', '0', '0'],
-                                    'wake_shape_generator': 'StraightWake'
+                                    'wake_shape_generator': 'StraightWake',
                                     'wake_shape_generator_input': {'u_inf': u_inf,
                                                                      'u_inf_direction': np.array([1., 0., 0.]),
-                                                                     'dt': dt}}
+                                                                     'dt': dt}
+                                    }
     config['AerogridPlot'] = {'include_rbm': 'on',
                               'include_applied_forces': 'on',
                               'minus_m_star': 0
