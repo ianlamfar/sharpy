@@ -15,6 +15,8 @@ def generate_pazy(u_inf, case_name, output_folder='/output/', cases_subfolder=''
     gravity_on = kwargs.get('gravity_on', True)
     skin_on = kwargs.get('skin_on', False)
     trailing_edge_weight = kwargs.get('trailing_edge_weight', False)
+    
+    num_cores = 32
 
     # Lattice Discretisation
     M = kwargs.get('M', 4)
@@ -91,7 +93,7 @@ def generate_pazy(u_inf, case_name, output_folder='/output/', cases_subfolder=''
         'rollup_dt': dt,
         'print_info': 'on',
         'horseshoe': 'off',
-        'num_cores': 8,
+        'num_cores': num_cores,
         'n_rollup': 0,
         'rollup_aic_refresh': 0,
         'rollup_tolerance': 1e-4}
@@ -116,7 +118,7 @@ def generate_pazy(u_inf, case_name, output_folder='/output/', cases_subfolder=''
             'rho': rho,
             'print_info': 'off',
             'horseshoe': 'off',
-            'num_cores': 8,
+            'num_cores': num_cores,
             'n_rollup': 0,
             'rollup_dt': dt,
             'rollup_aic_refresh': 1,
@@ -235,7 +237,7 @@ def generate_pazy(u_inf, case_name, output_folder='/output/', cases_subfolder=''
     
     settings['StepUvlm'] = {'print_info': 'on',
                             'horseshoe': 'off',
-                            'num_cores': 8,
+                            'num_cores': num_cores,
                             'n_rollup': 100,
                             'convection_scheme': 2,
                             'rollup_dt': dt,
@@ -290,7 +292,7 @@ def generate_pazy(u_inf, case_name, output_folder='/output/', cases_subfolder=''
 
 if __name__== '__main__':
     from datetime import datetime
-    vmin = 30
+    vmin = 10
     vmax = 85
     vnum = (vmax - vmin) + 1
     u_inf_vec = np.linspace(vmin, vmax, vnum)
@@ -303,7 +305,7 @@ if __name__== '__main__':
 
     M = 16
     N = 1
-    Ms = 10
+    Ms = 20
 
     batch_log = 'batch_log_alpha{:04g}'.format(alpha*100)
     

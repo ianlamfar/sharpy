@@ -39,6 +39,15 @@ class PazyWing:
     model_settings_options['controlled'] = [True, False]
     model_settings_description['controlled'] = 'Toggle for control surface'
     
+    model_settings_types['controller_type'] = 'str'
+    model_settings_default['controller_type'] = 'pde'
+    model_settings_options['controller_type'] = ['pid', 'pde']
+    model_settings_description['controller_type'] = 'controller type'
+    
+    model_settings_types['controller_settings'] = 'dict'
+    model_settings_default['controller_settings'] = {}
+    model_settings_description['controller_settings'] = 'controller settings'
+    
     model_settings_types['cs_deflection'] = 'list(float)'
     model_settings_default['cs_deflection'] = [0, 0]
     model_settings_description['cs_deflection'] = 'Initial control surface deflection'
