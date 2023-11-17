@@ -35,7 +35,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     # settings_description['D'] = 'Differential gain of the controller'
 
     settings_types['input_type'] = 'str'
-    settings_default['input_type'] = None
+    settings_default['input_type'] = 'lift'
     settings_description['input_type'] = (
         'Quantity used to define the' +
         ' reference state. Supported: `pitch`')
@@ -82,7 +82,8 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_default['output_limit'] = -1
     settings_description['output_limit'] = 'capping the controller output to a defined range -limit <= output <= limit, -1 if no limit'
 
-    supported_input_types = ['pitch', 'roll', 'pos_', 'tip rotation']
+
+    supported_input_types = ['pitch', 'roll', 'pos_', 'tip rotation', 'lift']
 
     settings_table = settings.SettingsTable()
     __doc__ += settings_table.generate(settings_types,
@@ -102,7 +103,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         # state_input_history[i] == input_time_history_file[i] + error[i]
         self.p_error_history = list()
         self.i_error_history = list()
-        self.d_error_history = list()
+        # self.d_error_history = list()
         self.real_state_input_history = list()
         self.control_history = list()
 
@@ -136,7 +137,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
             raise NotImplementedError()
 
         if self.settings['write_controller_log']:
-            self.log = open(self.settings['controller_log_route'] + '/' + self.controller_id + '.log.csv', 'w+')
+            self.log = open(self.settings['controller_log_route'] + self.controller_id + '_log.csv', 'x')
             self.log.write(('#' + 1 * '{:>2},' + 9 * '{:>12},' + '{:>12}\n').
                            format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'noise', 'capping', 'raw', 'control'))
             self.log.flush()
@@ -210,7 +211,8 @@ class ControlSurfacePdeController(controller_interface.BaseController):
             current_input=self.real_state_input_history,
             control_param={'P': self.settings['P'],
                            'I': self.settings['I'],
-                           'D': self.settings['D']},
+                        #    'D': self.settings['D'],
+                           },
             i_current=i_current,
             lag_index=lag_index)
 

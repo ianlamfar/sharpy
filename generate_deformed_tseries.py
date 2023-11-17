@@ -1,10 +1,10 @@
 import numpy as np
 import os
-import sharpy.sharpy_main
+import sharpy_control.sharpy_main
 import sys
-sys.path.append('../lib/pazy_model/')
+sys.path.append('./pazy/pazy_model/')
 from pazy_wing_model import PazyWing
-import sharpy.utils.algebra as algebra
+import sharpy_control.utils.algebra as algebra
 
 
 def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subfolder='', **kwargs):
@@ -16,7 +16,10 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     skin_on = kwargs.get('skin_on', False)
     trailing_edge_weight = kwargs.get('trailing_edge_weight', False)
     end_time = kwargs.get('end_time', 2)
-    num_cores = kwargs.get('num_cores', 4)
+    num_cores = kwargs.get('num_cores', 8)
+    
+    controller_id = kwargs.get('controller_id', {})
+    controller_settings = kwargs.get('controller_settings', {})
 
     # Lattice Discretisation
     M = kwargs.get('M', 4)
@@ -46,6 +49,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
         pazy.structure.add_lumped_mass((te_mass, pazy.structure.n_node//2 + 1, np.zeros((3, 3)),
                                         np.array([0, trailing_edge_b, 0])))
     pazy.save_files()
+    # print(M, N, M_star_fact, pazy.structure.n_elem)
 
     u_inf_direction = np.array([1., 0., 0.])
     dt = pazy.aero.main_chord / M / u_inf
@@ -71,11 +75,11 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
         'log_file': pazy.case_name + '.log'}
 
     pazy.config['BeamLoader'] = {
-        'unsteady': 'off',
+        'unsteady': False,
         'orientation': algebra.euler2quat([0., alpha_deg * np.pi / 180, 0])}
 
     pazy.config['AerogridLoader'] = {
-        'unsteady': 'off',
+        'unsteady': False,
         'aligned_grid': 'on',
         'mstar': M_star_fact * M,
         'freestream_dir': u_inf_direction,
@@ -111,7 +115,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     pazy.config['StaticCoupled'] = {
         'print_info': 'on',
         'max_iter': 200,
-        'n_load_steps': 4,
+        'n_load_steps': 4,  # default 4
         'tolerance': 1e-5,
         'relaxation_factor': 0.1,
         'aero_solver': 'StaticUvlm',
@@ -228,12 +232,12 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     settings = dict()
     settings['NonLinearDynamicPrescribedStep'] = {'print_info': 'on',
                                                   'max_iterations': 950,  # default 950
-                                                  'delta_curved': 1e-6,
-                                                  'min_delta': 1e-8,
-                                                  'newmark_damp': 5e-4,
+                                                  'delta_curved': 1e-1,  # default 1e-6
+                                                  'min_delta': 1e-3,  # default 1e-8
+                                                  'newmark_damp': 5e-3,  # default 5e-4
                                                   'gravity_on': gravity_on,
                                                   'gravity': 9.81,
-                                                  'num_steps': 1,
+                                                  'num_steps': n_tsteps,
                                                   'dt': dt}
     
     settings['StepUvlm'] = {'print_info': 'on',
@@ -254,7 +258,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                            'vortex_radius': 1e-10}
 
     settings['DynamicCoupled'] = {'print_info': 'on',
-                                  'structural_substeps': 10,
+                                  'structural_substeps': 0,  # default 10, major source of slowdown
                                   'dynamic_relaxation': 'on',
                                   'cleanup_previous_solution': 'on',
                                   'structural_solver': 'NonLinearDynamicPrescribedStep',
@@ -262,15 +266,17 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                                   'aero_solver': 'StepUvlm',
                                   'aero_solver_settings': settings['StepUvlm'],
                                   'fsi_substeps': 200,
-                                  'fsi_tolerance': 1e-6,
-                                  'relaxation_factor': 0.2,  # default 0.2
-                                  'minimum_steps': 1,
+                                  'fsi_tolerance': 1e-3,  # default 1e-6
+                                  'relaxation_factor': 0,  # default 0.2, relaxation causes slowdown but enhances stability
+                                  'minimum_steps': 0,  # min steps before convergence
                                   'relaxation_steps': 150,  # default 150
                                   'final_relaxation_factor': 0.0,
                                   'n_time_steps': n_tsteps,
                                   'dt': dt,
                                   'include_unsteady_force_contribution': 'off',
-                                #   'postprocessors': [],
+                                  'controller_id': controller_id,
+                                  'controller_settings': controller_settings,
+                                  'postprocessors': [],
                                 #   'postprocessors_settings': {'BeamLoads': {'folder': route_test_dir + output_folder,
                                 #                                             'csv_output': 'off'},
                                 #                               'BeamPlot': {'folder': route_test_dir + output_folder,
@@ -289,7 +295,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     pazy.config['DynamicCoupled'] = settings['DynamicCoupled']
     pazy.config.write()
     print(pazy.config)
-    out = sharpy.sharpy_main.main(['', pazy.case_route + '/' + pazy.case_name + '.sharpy'])
+    out = sharpy_control.sharpy_main.main(['', pazy.case_route + '/' + pazy.case_name + '.sharpy'])
     return out
 
 
@@ -300,12 +306,12 @@ if __name__== '__main__':
 
     alpha = 5
     gravity_on = False
-    skin_on = True
-    trailing_edge_weight = True
+    skin_on = False
+    trailing_edge_weight = False
 
-    M = 16
+    M = 4
     N = 1
-    Ms = 20
+    Ms = 10
 
     batch_log = 'batch_log_alpha{:04g}'.format(alpha*100)
 
