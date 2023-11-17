@@ -35,7 +35,7 @@ To Do:
 import warnings
 import numpy as np
 import scipy.sparse as sparse
-from scipy.sparse._sputils import upcast_char
+from scipy.sparse.sputils import upcast_char
 import scipy.sparse.linalg as spalg
 
 # --------------------------------------------------------------------- Classes
