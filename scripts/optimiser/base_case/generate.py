@@ -3,8 +3,8 @@ import os
 import math
 import h5py as h5
 import numpy as np
-import sharpy_control.utils.algebra as algebra
-import sharpy_control.utils.generate_cases as gc
+import sharpy.utils.algebra as algebra
+import sharpy.utils.generate_cases as gc
 
 
 def generate(x_dict={}, case_name=None):

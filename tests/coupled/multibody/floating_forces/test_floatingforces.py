@@ -3,7 +3,7 @@ import unittest
 import os
 import shutil
 from scipy import fft
-import sharpy_control.generators.floatingforces as ff
+import sharpy.generators.floatingforces as ff
 
 
 class TestFloatingForces(unittest.TestCase):

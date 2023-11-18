@@ -1,6 +1,6 @@
-import sharpy_control.utils.algebra as algebra
-from sharpy_control.cases.hangar.richards_wing import Baseline
-import sharpy_control.sharpy_main
+import sharpy.utils.algebra as algebra
+from sharpy.cases.hangar.richards_wing import Baseline
+import sharpy.sharpy_main
 import numpy as np
 import configobj
 import unittest
@@ -314,7 +314,7 @@ def run_rom_convergence(case_name, case_route='./cases/', output_folder='./outpu
         config[k] = v
     config.write()
 
-    return sharpy_control.sharpy_main.main(['', ws.case_route + '/' + ws.case_name + '.solver.txt'])
+    return sharpy.sharpy_main.main(['', ws.case_route + '/' + ws.case_name + '.solver.txt'])
 
 
 class TestHortenWing(unittest.TestCase):

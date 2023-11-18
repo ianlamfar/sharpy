@@ -1,10 +1,10 @@
 import unittest
-import sharpy_control.linear.src.libss as libss
+import sharpy.linear.src.libss as libss
 import scipy.linalg as sclalg
 import numpy as np
 import os
 
-import sharpy_control.utils.frequencyutils as frequencyutils
+import sharpy.utils.frequencyutils as frequencyutils
 
 
 class TestFrequencyUtils(unittest.TestCase):

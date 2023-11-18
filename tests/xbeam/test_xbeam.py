@@ -22,10 +22,10 @@ class TestGeradinXbeam(unittest.TestCase):
         mod = importlib.import_module('tests.xbeam.' + case + '.generate_' + case)
 
     def test_geradin(self):
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
         # suppress screen output
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/geradin/geradin.sharpy')
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = os.path.dirname(solver_path) + '/output/geradin/WriteVariablesTime/'

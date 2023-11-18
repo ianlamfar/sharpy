@@ -1,6 +1,6 @@
-import sharpy_control.utils.settings as settings
-import sharpy_control.utils.exceptions as exceptions
-import sharpy_control.utils.cout_utils as cout
+import sharpy.utils.settings as settings
+import sharpy.utils.exceptions as exceptions
+import sharpy.utils.cout_utils as cout
 from copy import deepcopy
 import numpy as np
 import unittest

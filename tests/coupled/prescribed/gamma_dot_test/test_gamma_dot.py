@@ -3,7 +3,7 @@ import numpy as np
 import unittest
 
 import cases.templates.flying_wings as wings
-import sharpy_control.sharpy_main
+import sharpy.sharpy_main
 
 
 def x_dot(x, dt, integration_order=2):
@@ -121,7 +121,7 @@ class TestGammaDot(unittest.TestCase):
 
         self.set_up_test_case(aero_type, predictor, sparse, integration_order)
         ws = self.ws
-        data = sharpy_control.sharpy_main.main(['', self.case_route + self.case_name + '.sharpy'])
+        data = sharpy.sharpy_main.main(['', self.case_route + self.case_name + '.sharpy'])
 
         # Obtain gamma
         gamma = np.zeros((ws.n_tstep,))

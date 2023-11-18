@@ -3,7 +3,7 @@ import numpy as np
 import configparser
 import os
 
-import sharpy_control.utils.algebra as algebra
+import sharpy.utils.algebra as algebra
 
 case_name = 'smith_g_4deg'
 route = os.path.dirname(os.path.realpath(__file__)) + '/'

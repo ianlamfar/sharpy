@@ -6,13 +6,13 @@ import os
 import unittest
 import numpy as np
 
-import sharpy_control.utils.frequencyutils
-import sharpy_control.utils.cout_utils as cout
+import sharpy.utils.frequencyutils
+import sharpy.utils.cout_utils as cout
 import scipy.io as scio
-import sharpy_control.utils.sharpydir as sharpydir
-import sharpy_control.linear.src.libss as libss
-import sharpy_control.rom.krylov as krylov
-import sharpy_control.linear.src.libsparse as libsp
+import sharpy.utils.sharpydir as sharpydir
+import sharpy.linear.src.libss as libss
+import sharpy.rom.krylov as krylov
+import sharpy.linear.src.libsparse as libsp
 
 
 class TestKrylov(unittest.TestCase):
@@ -51,7 +51,7 @@ class TestKrylov(unittest.TestCase):
         Y_fom = self.ss.freqresp(wv)
         Y_rom = ssrom.freqresp(wv)
 
-        max_error = sharpy_control.utils.frequencyutils.frequency_error(Y_fom, Y_rom, wv)
+        max_error = sharpy.utils.frequencyutils.frequency_error(Y_fom, Y_rom, wv)
 
         # can be used for debugging
         # import matplotlib.pyplot as plt

@@ -34,10 +34,10 @@ class TestCoupledStatic(unittest.TestCase):
         AIAA Paper, 1582, p.2001.
         :return:
         """
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) +
                                       '/smith_nog_2deg/smith_nog_2deg.sharpy')
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = os.path.dirname(solver_path) + '/output/smith_nog_2deg/WriteVariablesTime/'
@@ -59,10 +59,10 @@ class TestCoupledStatic(unittest.TestCase):
 
 
     def test_smith2deg_g(self):
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) +
                                       '/smith_g_2deg/smith_g_2deg.sharpy')
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = os.path.dirname(solver_path) + '/output/smith_g_2deg/WriteVariablesTime/'
@@ -79,10 +79,10 @@ class TestCoupledStatic(unittest.TestCase):
         instead of his. His results with gravity are not validated.***
         :return:
         """
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) +
                                       '/smith_g_4deg/smith_g_4deg.sharpy')
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = os.path.dirname(solver_path) + '/output/smith_g_4deg/WriteVariablesTime/'
@@ -109,10 +109,10 @@ class TestCoupledStatic(unittest.TestCase):
         14.668547249647393, 5.451612903225806
         :return:
         """
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) +
                                       '/smith_nog_4deg/smith_nog_4deg.sharpy')
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = os.path.dirname(solver_path) + '/output/smith_nog_4deg/WriteVariablesTime/'

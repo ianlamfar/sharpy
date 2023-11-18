@@ -5,13 +5,13 @@ spar_from_excel_type04
 Example of a file used to generate a floating wind turbine case
 """
 # Load libraries
-import sharpy_control.utils.generate_cases as gc
+import sharpy.utils.generate_cases as gc
 import cases.templates.template_wt as template_wt
 import numpy as np
 import os
-import sharpy_control.utils.algebra as algebra
-from sharpy_control.utils.constants import deg2rad
-import sharpy_control.sharpy_main
+import sharpy.utils.algebra as algebra
+from sharpy.utils.constants import deg2rad
+import sharpy.sharpy_main
 import unittest
 import shutil
 
@@ -181,7 +181,7 @@ class TestFloatingWindTrubine(unittest.TestCase):
                                                                            'r': 1.05,
                                                                            'dphimax': 10*deg2rad}
         
-        import sharpy_control.utils.generator_interface as gi
+        import sharpy.utils.generator_interface as gi
         gi.dictionary_of_generators(print_info=False)
         hw = gi.dict_of_generators['HelicoidalWake']
         wsg_in = SimInfo.solvers['AerogridLoader']['wake_shape_generator_input'] # for simplicity
@@ -365,12 +365,12 @@ class TestFloatingWindTrubine(unittest.TestCase):
     def test_floating_wind_turbine(self):
         name = self.generate_floating_wind_turbine(restart=False)
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/' + name + '.sharpy')
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
         
         name_restart = self.generate_floating_wind_turbine(restart=True)
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/' + name_restart + '.sharpy')
         restart_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/output/' + name + '/' + name + '.pkl')
-        sharpy_control.sharpy_main.main(['', '-r' + restart_path , solver_path])
+        sharpy.sharpy_main.main(['', '-r' + restart_path , solver_path])
 
         self.clean_files(name)
     

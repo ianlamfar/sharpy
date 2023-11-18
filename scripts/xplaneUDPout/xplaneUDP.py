@@ -5,9 +5,9 @@ import pickle
 import os
 import numpy as np
 
-import sharpy_control.utils.solver_interface as solver_interface
-import sharpy_control.postproc
-from sharpy_control.utils.algebra import quat2euler
+import sharpy.utils.solver_interface as solver_interface
+import sharpy.postproc
+from sharpy.utils.algebra import quat2euler
 
 class XPlaneIpNotFound(Exception):
     args = "Could not find any running XPlane instance in network."

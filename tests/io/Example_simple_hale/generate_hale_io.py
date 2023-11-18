@@ -2,8 +2,8 @@
 import h5py as h5
 import numpy as np
 import os
-import sharpy_control.utils.algebra as algebra
-import sharpy_control.sharpy_main
+import sharpy.utils.algebra as algebra
+import sharpy.sharpy_main
 
 case_name = 'simple_HALE'
 route = os.path.dirname(os.path.realpath(__file__)) + '/'
@@ -872,4 +872,4 @@ generate_dyn_file()
 
 case_route = ''
 
-sharpy_control.sharpy_main.main(['', case_route + '' + case_name + '.sharpy'])
+sharpy.sharpy_main.main(['', case_route + '' + case_name + '.sharpy'])

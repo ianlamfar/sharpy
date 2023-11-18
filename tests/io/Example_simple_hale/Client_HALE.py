@@ -3,7 +3,7 @@ import select
 import time
 import logging
 import struct
-import sharpy_control.io.message_interface as message_interface
+import sharpy.io.message_interface as message_interface
 import numpy as np
 """
 This is not a test but is to be used as client when testing the development of the input

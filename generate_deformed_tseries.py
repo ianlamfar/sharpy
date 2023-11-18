@@ -1,10 +1,10 @@
 import numpy as np
 import os
-import sharpy_control.sharpy_main
+import sharpy.sharpy_main
 import sys
 sys.path.append('./pazy/pazy_model/')
 from pazy_wing_model import PazyWing
-import sharpy_control.utils.algebra as algebra
+import sharpy.utils.algebra as algebra
 
 
 def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subfolder='', **kwargs):
@@ -298,7 +298,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     pazy.config['DynamicCoupled'] = settings['DynamicCoupled']
     pazy.config.write()
     # print(pazy.config)
-    out = sharpy_control.sharpy_main.main(['', pazy.case_route + '/' + pazy.case_name + '.sharpy'])
+    out = sharpy.sharpy_main.main(['', pazy.case_route + '/' + pazy.case_name + '.sharpy'])
     return out
 
 

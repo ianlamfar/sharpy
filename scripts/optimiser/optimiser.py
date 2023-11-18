@@ -61,8 +61,8 @@ import dill as pickle
 import GPyOpt
 
 
-import sharpy_control.sharpy_main
-import sharpy_control.utils.exceptions as exc
+import sharpy.sharpy_main
+import sharpy.utils.exceptions as exc
 
 cases = list()
 
@@ -438,7 +438,7 @@ def set_case(case_name, base_dict, x_dict, settings_dict, case_dict):
 def run_case(files):
     try:
         warnings.filterwarnings('ignore')
-        data = sharpy_control.sharpy_main.main(args=['', files['sharpy']])
+        data = sharpy.sharpy_main.main(args=['', files['sharpy']])
     except exc.NotConvergedSolver:
         print('The solver is not converged in this simulation with inputs')
         print('Returning None as data')

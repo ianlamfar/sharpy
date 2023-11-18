@@ -121,8 +121,8 @@ class TestDoublePendulum(unittest.TestCase):
     """
 
     def setUp(self):
-        import sharpy_control.utils.generate_cases as gc
-        from sharpy_control.utils.constants import deg2rad
+        import sharpy.utils.generate_cases as gc
+        from sharpy.utils.constants import deg2rad
 
         # Structural properties
         mass_per_unit_length = 1.
@@ -366,10 +366,10 @@ class TestDoublePendulum(unittest.TestCase):
         gc.generate_multibody_file(LC, MB,SimInfo.solvers['SHARPy']['route'], SimInfo.solvers['SHARPy']['case'])
 
     def run_and_assert(self, name):
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
 
         solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/' + name + '.sharpy')
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__))) + '/output/' + name + '/WriteVariablesTime/'
@@ -385,13 +385,13 @@ class TestDoublePendulum(unittest.TestCase):
         self.run_and_assert(name_spherical)
 
     def test_doublependulum_ga(self):
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
 
         nb_solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/' + name_nb_zero_dis + '.sharpy')
-        sharpy_control.sharpy_main.main(['', nb_solver_path])
+        sharpy.sharpy_main.main(['', nb_solver_path])
 
         ga_solver_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__)) + '/' + name_ga + '.sharpy')
-        sharpy_control.sharpy_main.main(['', ga_solver_path])
+        sharpy.sharpy_main.main(['', ga_solver_path])
 
         # read output and compare
         nb_output_path = os.path.abspath(os.path.dirname(os.path.realpath(__file__))) + '/output/' + name_nb_zero_dis + '/WriteVariablesTime/'

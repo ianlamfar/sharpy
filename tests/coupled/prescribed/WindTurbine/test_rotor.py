@@ -17,9 +17,9 @@ class TestRotor(unittest.TestCase):
     """
 
     def setUp(self):
-        import sharpy_control.utils.generate_cases as gc
-        import sharpy_control.cases.templates.template_wt as template_wt
-        from sharpy_control.utils.constants import deg2rad
+        import sharpy.utils.generate_cases as gc
+        import sharpy.cases.templates.template_wt as template_wt
+        from sharpy.utils.constants import deg2rad
 
         ######################################################################
         ###########################  PARAMETERS  #############################
@@ -111,10 +111,10 @@ class TestRotor(unittest.TestCase):
         SimInfo.generate_solver_file()
 
     def test_rotor(self):
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
 
         solver_path = folder + '/' + case + '.sharpy'
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = folder + '/output/' + case + '/beam_modal_analysis/'

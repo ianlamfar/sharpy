@@ -11,13 +11,13 @@ import itertools
 import numpy as np
 import scipy.linalg as scalg
 
-import sharpy_control.utils.h5utils as h5utils
-import sharpy_control.linear.src.assembly as assembly
-import sharpy_control.linear.src.multisurfaces as multisurfaces
-import sharpy_control.linear.src.surface as surface
-import sharpy_control.utils.algebra as algebra
-import sharpy_control.utils.cout_utils as cout
-import sharpy_control.sharpy_main
+import sharpy.utils.h5utils as h5utils
+import sharpy.linear.src.assembly as assembly
+import sharpy.linear.src.multisurfaces as multisurfaces
+import sharpy.linear.src.surface as surface
+import sharpy.utils.algebra as algebra
+import sharpy.utils.cout_utils as cout
+import sharpy.sharpy_main
 
 
 np.set_printoptions(linewidth=200, precision=3)
@@ -1071,7 +1071,7 @@ class Test_assembly(unittest.TestCase):
         cout_wrap = cout.Writer()
         # cout_wrap.initialise(print_screen=False, print_file=False)
         cout_wrap.cout_quiet()
-        sharpy_control.utils.cout_utils.cout_wrap = cout_wrap
+        sharpy.utils.cout_utils.cout_wrap = cout_wrap
 
 
     def tearDown(self):

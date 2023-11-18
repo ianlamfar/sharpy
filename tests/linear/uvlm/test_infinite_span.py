@@ -12,13 +12,13 @@ import os
 # import matplotlib.pyplot as plt
 import numpy as np
 import shutil
-import sharpy_control.sharpy_main
-import sharpy_control.utils.algebra as algebra
-import sharpy_control.utils.analytical as an
-import sharpy_control.linear.src.linuvlm as linuvlm
-import sharpy_control.cases.templates.flying_wings as flying_wings
-import sharpy_control.utils.sharpydir as sharpydir
-import sharpy_control.utils.cout_utils as cout
+import sharpy.sharpy_main
+import sharpy.utils.algebra as algebra
+import sharpy.utils.analytical as an
+import sharpy.linear.src.linuvlm as linuvlm
+import sharpy.cases.templates.flying_wings as flying_wings
+import sharpy.utils.sharpydir as sharpydir
+import sharpy.utils.cout_utils as cout
 
 
 class Test_infinite_span(unittest.TestCase):
@@ -101,7 +101,7 @@ class Test_infinite_span(unittest.TestCase):
         ws.config.write()
 
         # solve at linearistion point
-        data0 = sharpy_control.sharpy_main.main(['...', route_main + self.case_main + '.sharpy'])
+        data0 = sharpy.sharpy_main.main(['...', route_main + self.case_main + '.sharpy'])
         tsaero0 = data0.aero.timestep_info[0]
         tsaero0.rho = ws.config['LinearUvlm']['density']
 
@@ -288,7 +288,7 @@ class Test_infinite_span(unittest.TestCase):
         ws_pert.config.write()
 
         # solve at perturbed point
-        data_pert = sharpy_control.sharpy_main.main(['...', self.route_main + case_pert + '.sharpy'])
+        data_pert = sharpy.sharpy_main.main(['...', self.route_main + case_pert + '.sharpy'])
         tsaero = data_pert.aero.timestep_info[0]
 
         self.start_writer()
@@ -439,7 +439,7 @@ class Test_infinite_span(unittest.TestCase):
         cout_wrap = cout.Writer()
         # cout_wrap.initialise(print_screen=False, print_file=False)
         cout_wrap.cout_quiet()
-        sharpy_control.utils.cout_utils.cout_wrap = cout_wrap
+        sharpy.utils.cout_utils.cout_wrap = cout_wrap
 
     def tearDown(self):
         cout.finish_writer()

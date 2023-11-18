@@ -1,4 +1,4 @@
-import sharpy_control.utils.algebra as algebra
+import sharpy.utils.algebra as algebra
 import numpy as np
 import unittest
 import random

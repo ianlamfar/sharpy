@@ -2,7 +2,7 @@ import numpy as np
 import importlib
 import unittest
 import os
-import sharpy_control.utils.cout_utils as cout
+import sharpy.utils.cout_utils as cout
 
 
 class TestCoupledDynamic(unittest.TestCase):
@@ -26,14 +26,14 @@ class TestCoupledDynamic(unittest.TestCase):
         reference results produced with SHARPy version 1.3
         :return:
         """
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
 
         case_name = 'hale'
         route_test_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
         cases_folder = os.path.join(route_test_dir, case_name)
         output_folder = cases_folder + '/output/'
 
-        sharpy_control.sharpy_main.main(['', cases_folder + '/hale.sharpy'])
+        sharpy.sharpy_main.main(['', cases_folder + '/hale.sharpy'])
         n_tstep = 20
 
         # compare results with reference values 

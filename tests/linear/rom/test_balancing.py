@@ -1,9 +1,9 @@
 import copy
 import unittest
-import sharpy_control.linear.src.libss as libss
-import sharpy_control.rom.utils.librom as librom
+import sharpy.linear.src.libss as libss
+import sharpy.rom.utils.librom as librom
 import numpy as np
-import sharpy_control.linear.src.libsparse as libsp
+import sharpy.linear.src.libsparse as libsp
 import scipy.linalg as scalg
 
 

@@ -5,8 +5,8 @@ import glob
 import configobj
 import numpy as np
 
-from sharpy_control.aero.utils.utils import local_stability_axes
-import sharpy_control.utils.algebra as algebra
+from sharpy.aero.utils.utils import local_stability_axes
+import sharpy.utils.algebra as algebra
 
 
 class InfiniteWing:

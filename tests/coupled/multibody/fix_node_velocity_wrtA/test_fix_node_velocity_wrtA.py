@@ -9,7 +9,7 @@ folder = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 class TestFixNodeVelocitywrtA(unittest.TestCase):
 
     def setUp(self):
-        import sharpy_control.utils.generate_cases as gc
+        import sharpy.utils.generate_cases as gc
 
         nodes_per_elem = 3
 
@@ -162,10 +162,10 @@ class TestFixNodeVelocitywrtA(unittest.TestCase):
         # pass
 
     def test_testfixnodevelocitywrta(self):
-        import sharpy_control.sharpy_main
+        import sharpy.sharpy_main
 
         solver_path = folder + '/fix_node_velocity_wrtA.sharpy'
-        sharpy_control.sharpy_main.main(['', solver_path])
+        sharpy.sharpy_main.main(['', solver_path])
 
         # read output and compare
         output_path = folder + '/output/fix_node_velocity_wrtA/WriteVariablesTime/'

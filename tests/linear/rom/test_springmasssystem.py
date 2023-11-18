@@ -6,12 +6,12 @@ NGoizueta 16 Feb 2019
 """
 
 import numpy as np
-import sharpy_control.linear.src.libss as libss
-import sharpy_control.linear.src.lingebm as lingebm
-import sharpy_control.rom.krylov as krylov
+import sharpy.linear.src.libss as libss
+import sharpy.linear.src.lingebm as lingebm
+import sharpy.rom.krylov as krylov
 import unittest
 # import matplotlib.pyplot as plt
-import sharpy_control.utils.cout_utils as cout
+import sharpy.utils.cout_utils as cout
 
 cout.cout_wrap.initialise(False, False)
 

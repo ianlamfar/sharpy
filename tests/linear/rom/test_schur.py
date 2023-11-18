@@ -4,9 +4,9 @@
 
 import numpy as np
 import unittest
-import sharpy_control.rom.krylov as krylov
+import sharpy.rom.krylov as krylov
 import os
-import sharpy_control.utils.cout_utils as coututils
+import sharpy.utils.cout_utils as coututils
 
 
 class TestSchurDecomposition(unittest.TestCase):
