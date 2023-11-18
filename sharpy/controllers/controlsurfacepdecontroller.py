@@ -84,6 +84,10 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_types['output_limit'] = 'float'
     settings_default['output_limit'] = -1
     settings_description['output_limit'] = 'capping the controller output to a defined range -limit <= output <= limit, -1 if no limit'
+    
+    settings_types['rho'] = 'float'
+    settings_default['rho'] = 1.225
+    settings_description['rho'] = 'density for CL calculation'
 
 
     # supported_input_types = ['pitch', 'roll', 'pos_', 'tip rotation', 'lift']
@@ -298,12 +302,8 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         lift_distribution = np.zeros((N_nodes, numb_col))
         # get rotation matrix
         cga = algebra.quat2rotation(struct_tstep.quat)
-        # if self.settings["coefficients"]:
-        #     # TODO: add nondimensional spanwise column y/s
-        #     header += ", y/s, cl"
-        #     numb_col += 2
-        #     lift_distribution = np.concatenate((lift_distribution, np.zeros((N_nodes, 2))), axis=1)
 
+        total_area = 0
         for inode in range(N_nodes):
             if self.data.aero.aero_dict['aero_node'][inode]:
                 local_node = self.data.aero.struct2aero_mapping[inode][0]["i_n"]
@@ -320,6 +320,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                                                                                         aero_tstep.u_ext[i_surf][:, :,
                                                                                         local_node])
                 dir_span, span, dir_chord, chord = aeroutils.span_chord(local_node, aero_tstep.zeta[i_surf])
+                total_area += span * chord
                 # Stability axes - projects forces in B onto S
                 c_bs = aeroutils.local_stability_axes(cgb.T.dot(dir_urel), cgb.T.dot(dir_chord))
                 lift_force = c_bs.T.dot(forces[inode, :3])[2]
@@ -328,21 +329,12 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                 lift_distribution[inode, 2] = struct_tstep.pos[inode, 2]  # z
                 lift_distribution[inode, 1] = struct_tstep.pos[inode, 1]  # y
                 lift_distribution[inode, 0] = struct_tstep.pos[inode, 0]  # x
-                # if self.settings["coefficients"]:
-                #     # Get non-dimensional spanwise coordinate y/s
-                #     lift_distribution[inode, 4] = lift_distribution[inode, 1]/span
-                #     # Get lift coefficient
-                #     lift_distribution[inode, 5] = np.sign(lift_force) * np.linalg.norm(lift_force) \
-                #                                   / (0.5 * self.settings['rho'] \
-                #                                      * np.linalg.norm(urel) ** 2 * span * chord)  # strip_area[i_surf][local_node])
-                #     # Check if shared nodes from different surfaces exist (e.g. two wings joining at symmetry plane)
-                #     # Leads to error since panel area just donates for half the panel size while lift forces is summed up
-                #     lift_distribution[inode, 5] /= len(self.data.aero.struct2aero_mapping[inode])
         
-        output = np.sum(lift_distribution[:, -1])  # non-normalised
-        # print(output)
-        
-        # extract CL from lift
+        lift = np.sum(lift_distribution[:, -1])  # total lift force
+        u = np.linalg.norm(urel)
+        if u > 0.0:
+            output = np.sign(lift) * lift_force / (0.5 * self.settings['rho'] * (u**2) * total_area)
+        else: output = 0.0
         
         return output
 
