@@ -323,7 +323,7 @@ class DynamicCoupled(BaseSolver):
             self.controllers[controller_id].initialise(self.data,
                     self.settings['controller_settings'][controller_id],
                     controller_id, restart=restart)
-        
+
         # print information header
         if self.print_info:
             self.residual_table = cout.TablePrinter(8, 12, ['g', 'f', 'g', 'f', 'f', 'f', 'e', 'e'])

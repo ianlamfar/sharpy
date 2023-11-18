@@ -52,7 +52,7 @@ class PazyAero:
         for i in range(len(cs_deflection)):
             self.control_surface_deflection[i] = cs_deflection[i] * np.pi / 180
         self.control_surface_chord = int(self.m * pct_chord) * np.ones(self.n_control_surfaces, dtype=int)
-        self.control_surface_type = np.zeros(self.n_control_surfaces, dtype=int)
+        self.control_surface_type = np.ones(self.n_control_surfaces, dtype=int) * (2 * kwargs.get('controlled', False))
         self.control_surface_hinge_coord = np.zeros_like(self.control_surface_type, dtype=float)  # do I need this for cs to function?
 
     def generate_aero(self):

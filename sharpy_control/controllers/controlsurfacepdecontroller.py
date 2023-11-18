@@ -4,6 +4,9 @@ import sharpy_control.utils.controller_interface as controller_interface
 import sharpy_control.utils.settings as settings
 import sharpy_control.utils.control_utils as control_utils
 import sharpy_control.utils.cout_utils as cout
+import sharpy_control.aero.utils.mapping as mapping
+import sharpy_control.utils.algebra as algebra
+import sharpy_control.aero.utils.utils as aeroutils
 
 
 @controller_interface.controller
@@ -34,11 +37,11 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     # settings_default['D'] = 0.0
     # settings_description['D'] = 'Differential gain of the controller'
 
-    settings_types['input_type'] = 'str'
-    settings_default['input_type'] = 'lift'
-    settings_description['input_type'] = (
-        'Quantity used to define the' +
-        ' reference state. Supported: `pitch`')
+    # settings_types['input_type'] = 'str'
+    # settings_default['input_type'] = 'lift'
+    # settings_description['input_type'] = (
+    #     'Quantity used to define the' +
+    #     ' reference state. Supported: `pitch`')
 
     settings_types['dt'] = 'float'
     settings_default['dt'] = None
@@ -83,7 +86,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_description['output_limit'] = 'capping the controller output to a defined range -limit <= output <= limit, -1 if no limit'
 
 
-    supported_input_types = ['pitch', 'roll', 'pos_', 'tip rotation', 'lift']
+    # supported_input_types = ['pitch', 'roll', 'pos_', 'tip rotation', 'lift']
 
     settings_table = settings.SettingsTable()
     __doc__ += settings_table.generate(settings_types,
@@ -123,21 +126,21 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         self.controller_id = controller_id
 
         # validate that the input_type is in the supported ones
-        valid = False
-        for t in self.supported_input_types:
-            if t in self.settings['input_type']:
-                valid = True
-                break
-        if not valid:
-            cout.cout_wrap('The input_type {} is not supported by {}'.format(
-                self.settings['input_type'], self.controller_id), 3)
-            cout.cout_wrap('The supported ones are:', 3)
-            for i in self.supported_input_types:
-                cout.cout_wrap('    {}'.format(i), 3)
-            raise NotImplementedError()
+        # valid = False
+        # for t in self.supported_input_types:
+        #     if t in self.settings['input_type']:
+        #         valid = True
+        #         break
+        # if not valid:
+        #     cout.cout_wrap('The input_type {} is not supported by {}'.format(
+        #         self.settings['input_type'], self.controller_id), 3)
+        #     cout.cout_wrap('The supported ones are:', 3)
+        #     for i in self.supported_input_types:
+        #         cout.cout_wrap('    {}'.format(i), 3)
+        #     raise NotImplementedError()
 
         if self.settings['write_controller_log']:
-            self.log = open(self.settings['controller_log_route'] + self.controller_id + '_log.csv', 'x')
+            self.log = open(self.settings['controller_log_route'] + self.controller_id + '_log.csv', 'w+')
             self.log.write(('#' + 1 * '{:>2},' + 9 * '{:>12},' + '{:>12}\n').
                            format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'noise', 'capping', 'raw', 'control'))
             self.log.flush()
@@ -192,7 +195,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         :returns: A `dict` with `structural` and `aero` time steps and control
             input included.
         """
-
+        self.data = data
         # get current state input
         self.real_state_input_history.append(self.extract_time_history(controlled_state))
         # print(self.real_state_input_history)
@@ -215,6 +218,8 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                            },
             i_current=i_current,
             lag_index=lag_index)
+        
+        # print(control_command, detail)
 
         # save raw command before applying noise and cap
         raw_command = control_command
@@ -269,41 +274,76 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         return controlled_state
 
     def extract_time_history(self, controlled_state):
-        output = 0.0
-        if self.settings['input_type'] == 'pitch':
-            step = controlled_state['structural']
-            euler = step.euler_angles()
-            output = euler[1]
-        elif self.settings['input_type'] == 'tip rotation':
-            step = controlled_state['structural']
-            output = step.psi[-1, -1, 1]
-        elif self.settings['input_type'] == 'roll':
-            step = controlled_state['structural']
-            euler = step.euler_angles()
-            output = euler[0]
-        elif 'pos_z(' in self.settings['input_type']:
-            node_str = self.settings['input_type']
-            node_str = node_str.replace('pos(', '')
-            node_str = node_str.replace(')', '')
-            node = int(node_str)
-            step = controlled_state['structural']
-            pos = step.pos[node, :]
-            output = pos[2]
-        elif self.settings['input_type'] == 'tip_strain_int':
-            sstep = controlled_state['structural']
-            astep = controlled_state['aero']
-            pass
-        elif self.settings['input_type'] == 'tip_strain_dot_int':
-            pass
-        elif self.settings['input type'] == 'lift':
-            step = controlled_state['aero']
-            lift = step.body_total_forces[:, 2]
-            output = np.sum(lift)
-        else:
-            raise NotImplementedError(
-                "input_type {} is not yet implemented in extract_time_history()"
-                .format(self.settings['input_type']))
+        output: float = 0.0
+        aero_tstep = controlled_state['aero']
+        struct_tstep = controlled_state['structural']
+        lift = 0
+        output = np.sum(lift)
+        
+        forces = mapping.aero2struct_force_mapping(
+            aero_tstep.forces + aero_tstep.dynamic_forces,
+            self.data.aero.struct2aero_mapping,
+            aero_tstep.zeta,
+            struct_tstep.pos,
+            struct_tstep.psi,
+            self.data.structure.node_master_elem,
+            self.data.structure.connectivities,
+            struct_tstep.cag(),
+            self.data.aero.aero_dict)
+        
+        N_nodes = self.data.structure.num_node
+        numb_col = 4
+        header = "x,y,z,fz"
+        # get aero forces
+        lift_distribution = np.zeros((N_nodes, numb_col))
+        # get rotation matrix
+        cga = algebra.quat2rotation(struct_tstep.quat)
+        # if self.settings["coefficients"]:
+        #     # TODO: add nondimensional spanwise column y/s
+        #     header += ", y/s, cl"
+        #     numb_col += 2
+        #     lift_distribution = np.concatenate((lift_distribution, np.zeros((N_nodes, 2))), axis=1)
 
+        for inode in range(N_nodes):
+            if self.data.aero.aero_dict['aero_node'][inode]:
+                local_node = self.data.aero.struct2aero_mapping[inode][0]["i_n"]
+                ielem, inode_in_elem = self.data.structure.node_master_elem[inode]
+                i_surf = int(self.data.aero.surface_distribution[ielem])
+                # get c_gb
+                cab = algebra.crv2rotation(struct_tstep.psi[ielem, inode_in_elem, :])
+                cgb = np.dot(cga, cab)
+                # Get c_bs
+                urel, dir_urel = aeroutils.magnitude_and_direction_of_relative_velocity(struct_tstep.pos[inode, :],
+                                                                                        struct_tstep.pos_dot[inode, :],
+                                                                                        struct_tstep.for_vel[:],
+                                                                                        cga,
+                                                                                        aero_tstep.u_ext[i_surf][:, :,
+                                                                                        local_node])
+                dir_span, span, dir_chord, chord = aeroutils.span_chord(local_node, aero_tstep.zeta[i_surf])
+                # Stability axes - projects forces in B onto S
+                c_bs = aeroutils.local_stability_axes(cgb.T.dot(dir_urel), cgb.T.dot(dir_chord))
+                lift_force = c_bs.T.dot(forces[inode, :3])[2]
+                # Store data in export matrix
+                lift_distribution[inode, 3] = lift_force
+                lift_distribution[inode, 2] = struct_tstep.pos[inode, 2]  # z
+                lift_distribution[inode, 1] = struct_tstep.pos[inode, 1]  # y
+                lift_distribution[inode, 0] = struct_tstep.pos[inode, 0]  # x
+                # if self.settings["coefficients"]:
+                #     # Get non-dimensional spanwise coordinate y/s
+                #     lift_distribution[inode, 4] = lift_distribution[inode, 1]/span
+                #     # Get lift coefficient
+                #     lift_distribution[inode, 5] = np.sign(lift_force) * np.linalg.norm(lift_force) \
+                #                                   / (0.5 * self.settings['rho'] \
+                #                                      * np.linalg.norm(urel) ** 2 * span * chord)  # strip_area[i_surf][local_node])
+                #     # Check if shared nodes from different surfaces exist (e.g. two wings joining at symmetry plane)
+                #     # Leads to error since panel area just donates for half the panel size while lift forces is summed up
+                #     lift_distribution[inode, 5] /= len(self.data.aero.struct2aero_mapping[inode])
+        
+        output = np.sum(lift_distribution[:, -1])  # non-normalised
+        # print(output)
+        
+        # extract CL from lift
+        
         return output
 
     def controller_wrapper(self,

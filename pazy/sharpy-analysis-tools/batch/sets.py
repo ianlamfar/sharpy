@@ -84,7 +84,7 @@ class Actual:
                 self.cases[sys].add_case(param_value, case)
 
             n_loaded_cases += 1
-        print(f'Loaded {n_loaded_cases} cases from {source_cases_name}')
+        print(f'Loaded {n_loaded_cases} cases')
 
 
     def eigs(self, sys):

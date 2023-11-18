@@ -163,7 +163,7 @@ class PDE(object):
     def reset_integrator(self):
         self._accumulated_integral = 0.0
 
-    def __call__(self, state, theta):
+    def __call__(self, state):
         self._n_calls += 1
         actuation = 0.0
         error = self._point - state

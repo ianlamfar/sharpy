@@ -29,6 +29,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     # SHARPy nonlinear reference solution
     route_test_dir = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
     case_route = route_test_dir + '/cases/' + cases_subfolder + '/' + case_name
+
     if not os.path.exists(case_route):
         os.makedirs(case_route)
 
@@ -71,7 +72,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
              ],
         'case': pazy.case_name, 'route': pazy.case_route,
         'write_screen': 'on', 'write_log': 'on',
-        'log_folder': route_test_dir + output_folder + pazy.case_name + '/',
+        'log_folder': output_folder + pazy.case_name + '/',
         'log_file': pazy.case_name + '.log'}
 
     pazy.config['BeamLoader'] = {
@@ -86,83 +87,85 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
         'wake_shape_generator': 'StraightWake',
         'wake_shape_generator_input': {'u_inf': u_inf,
                                        'u_inf_direction': u_inf_direction,
-                                       'dt': dt}}
-
-    pazy.config['StaticUvlm'] = {
-        'rho': rho,
-        'velocity_field_generator': 'SteadyVelocityField',
-        'velocity_field_input': {
-            'u_inf': u_inf,
-            'u_inf_direction': u_inf_direction},
-        # 'rollup_dt': dt,
-        'print_info': 'on',
-        # 'horseshoe': 'off',
-        'num_cores': num_cores,
-        # 'n_rollup': 0,
-        # 'rollup_aic_refresh': 0,
-        # 'rollup_tolerance': 1e-4
+                                       'dt': dt},
+        # 'control_surface_deflection': model_settings['cs_deflection'],
         }
 
-    settings = dict()
-    settings['NonLinearStatic'] = {'print_info': 'off',
-                                   'max_iterations': 200,
-                                   'num_load_steps': 5,
-                                   'delta_curved': 1e-6,
-                                   'min_delta': 1e-8,
-                                   'gravity_on': gravity_on,
-                                   'gravity': 9.81}
+    # pazy.config['StaticUvlm'] = {
+    #     'rho': rho,
+    #     'velocity_field_generator': 'SteadyVelocityField',
+    #     'velocity_field_input': {
+    #         'u_inf': u_inf,
+    #         'u_inf_direction': u_inf_direction},
+    #     # 'rollup_dt': dt,
+    #     'print_info': 'on',
+    #     # 'horseshoe': 'off',
+    #     'num_cores': num_cores,
+    #     # 'n_rollup': 0,
+    #     # 'rollup_aic_refresh': 0,
+    #     # 'rollup_tolerance': 1e-4
+    #     }
 
-    pazy.config['StaticCoupled'] = {
-        'print_info': 'on',
-        'max_iter': 200,
-        'n_load_steps': 4,  # default 4
-        'tolerance': 1e-5,
-        'relaxation_factor': 0.1,
-        'aero_solver': 'StaticUvlm',
-        'aero_solver_settings': {
-            'rho': rho,
-            'print_info': 'off',
-            # 'horseshoe': 'off',
-            'num_cores': num_cores,
-            # 'n_rollup': 0,
-            # 'rollup_dt': dt,
-            # 'rollup_aic_refresh': 1,
-            # 'rollup_tolerance': 1e-4,
-            'vortex_radius': 1e-7,
-            'velocity_field_generator': 'SteadyVelocityField',
-            'velocity_field_input': {
-                'u_inf': u_inf,
-                'u_inf_direction': u_inf_direction}},
-        'structural_solver': 'NonLinearStatic',
-        'structural_solver_settings': settings['NonLinearStatic']}
+    # settings = dict()
+    # settings['NonLinearStatic'] = {'print_info': 'off',
+    #                                'max_iterations': 200,
+    #                                'num_load_steps': 5,
+    #                                'delta_curved': 1e-6,
+    #                                'min_delta': 1e-8,
+    #                                'gravity_on': gravity_on,
+    #                                'gravity': 9.81}
 
-    pazy.config['AerogridPlot'] = {
-                                #    'folder': route_test_dir + output_folder,
-                                 'include_rbm': 'off',
-                                 'include_applied_forces': 'on',
-                                 'minus_m_star': 0}
+    # pazy.config['StaticCoupled'] = {
+    #     'print_info': 'on',
+    #     'max_iter': 200,
+    #     'n_load_steps': 4,  # default 4
+    #     'tolerance': 1e-5,
+    #     'relaxation_factor': 0.1,
+    #     'aero_solver': 'StaticUvlm',
+    #     'aero_solver_settings': {
+    #         'rho': rho,
+    #         'print_info': 'off',
+    #         # 'horseshoe': 'off',
+    #         'num_cores': num_cores,
+    #         # 'n_rollup': 0,
+    #         # 'rollup_dt': dt,
+    #         # 'rollup_aic_refresh': 1,
+    #         # 'rollup_tolerance': 1e-4,
+    #         'vortex_radius': 1e-7,
+    #         'velocity_field_generator': 'SteadyVelocityField',
+    #         'velocity_field_input': {
+    #             'u_inf': u_inf,
+    #             'u_inf_direction': u_inf_direction}},
+    #     'structural_solver': 'NonLinearStatic',
+    #     'structural_solver_settings': settings['NonLinearStatic']}
 
-    pazy.config['AeroForcesCalculator'] = {'folder': route_test_dir + '/{:s}/forces'.format(output_folder),
-                                         'write_text_file': 'on',
-                                         'text_file_name': pazy.case_name + '_aeroforces.csv',
-                                         'screen_output': 'on',
-                                         'unsteady': 'off'}
+    # pazy.config['AerogridPlot'] = {
+    #                             #    'folder': route_test_dir + output_folder,
+    #                              'include_rbm': 'off',
+    #                              'include_applied_forces': 'on',
+    #                              'minus_m_star': 0}
 
-    pazy.config['BeamPlot'] = {
-                            #    'folder': route_test_dir + output_folder,
-                             'include_rbm': 'off',
-                             'include_applied_forces': 'on'}
+    # pazy.config['AeroForcesCalculator'] = {'folder': route_test_dir + '/{:s}/forces'.format(output_folder),
+    #                                      'write_text_file': 'on',
+    #                                      'text_file_name': pazy.case_name + '_aeroforces.csv',
+    #                                      'screen_output': 'on',
+    #                                      'unsteady': 'off'}
 
-    pazy.config['BeamCsvOutput'] = {
-                                    # 'folder': route_test_dir + output_folder,
-                                  'output_pos': 'on',
-                                  'output_psi': 'on',
-                                  'screen_output': 'on'}
+    # pazy.config['BeamPlot'] = {
+    #                         #    'folder': route_test_dir + output_folder,
+    #                          'include_rbm': 'off',
+    #                          'include_applied_forces': 'on'}
 
-    pazy.config['WriteVariablesTime'] = {
-                                        # 'folder': route_test_dir + output_folder,
-                                        'structure_variables': ['pos'],
-                                        'structure_nodes': list(range(0, pazy.structure.n_node//2))}
+    # pazy.config['BeamCsvOutput'] = {
+    #                                 # 'folder': route_test_dir + output_folder,
+    #                               'output_pos': 'on',
+    #                               'output_psi': 'on',
+    #                               'screen_output': 'on'}
+
+    # pazy.config['WriteVariablesTime'] = {
+    #                                     # 'folder': route_test_dir + output_folder,
+    #                                     'structure_variables': ['pos'],
+    #                                     'structure_nodes': list(range(0, pazy.structure.n_node//2))}
 
     # pazy.config['Modal'] = {
     #                         # 'folder': route_test_dir + output_folder,
@@ -266,10 +269,10 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                                   'aero_solver': 'StepUvlm',
                                   'aero_solver_settings': settings['StepUvlm'],
                                   'fsi_substeps': 200,
-                                  'fsi_tolerance': 1e-3,  # default 1e-6
+                                  'fsi_tolerance': 1e-4,  # default 1e-6
                                   'relaxation_factor': 0,  # default 0.2, relaxation causes slowdown but enhances stability
                                   'minimum_steps': 0,  # min steps before convergence
-                                  'relaxation_steps': 150,  # default 150
+                                  'relaxation_steps': 0,  # default 150
                                   'final_relaxation_factor': 0.0,
                                   'n_time_steps': n_tsteps,
                                   'dt': dt,
@@ -294,7 +297,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     
     pazy.config['DynamicCoupled'] = settings['DynamicCoupled']
     pazy.config.write()
-    print(pazy.config)
+    # print(pazy.config)
     out = sharpy_control.sharpy_main.main(['', pazy.case_route + '/' + pazy.case_name + '.sharpy'])
     return out
 

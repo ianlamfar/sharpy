@@ -303,9 +303,9 @@ if __name__== '__main__':
     skin_on = False
     trailing_edge_weight = False
 
-    M = 16
+    M = 4
     N = 1
-    Ms = 20
+    Ms = 10
 
     batch_log = 'batch_log_alpha{:04g}'.format(alpha*100)
     

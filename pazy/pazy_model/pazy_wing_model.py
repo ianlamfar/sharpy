@@ -160,7 +160,8 @@ def view_wing(case_name, case_route='./', output_folder='./output/'):
         'wake_shape_generator': 'StraightWake',
         'wake_shape_generator_input': {'u_inf': 10,
                                        'u_inf_direction': [1, 0, 0],
-                                       'dt': 0.01}}
+                                       'dt': 0.01},
+        }
 
 
     settings['Modal'] = {
