@@ -48,7 +48,7 @@ class PazyStructure:
         
         self.source = dict()
 
-        self.debug = False
+        self.debug = True
 
     def generate(self):
         self.coordinates(method_tuple=(self.discretisation_method, self.init_discretisation))

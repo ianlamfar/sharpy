@@ -297,7 +297,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     
     pazy.config['DynamicCoupled'] = settings['DynamicCoupled']
     pazy.config.write()
-    # print(pazy.config)
+    print(pazy.structure.lumped_mass)
     out = sharpy.sharpy_main.main(['', pazy.case_route + '/' + pazy.case_name + '.sharpy'])
     return out
 
