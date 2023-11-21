@@ -50,6 +50,7 @@ class Aerogrid(object):
         self.wake_shape_generator = None
 
     def generate(self, aero_dict, beam, aero_settings, ts):
+        print(self.aero_dict)
         self.aero_dict = aero_dict
         self.beam = beam
         self.aero_settings = aero_settings
@@ -319,8 +320,6 @@ class Aerogrid(object):
                         else:
                             raise NotImplementedError(str(self.aero_dict['control_surface_type'][i_control_surface]) +
                                 ' control surfaces are not yet implemented')
-
-
 
                 node_info = dict()
                 node_info['i_node'] = i_global_node

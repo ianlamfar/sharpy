@@ -53,7 +53,7 @@ class PazyAero:
             self.control_surface_deflection[i] = cs_deflection[i] * np.pi / 180
         self.control_surface_chord = int(self.m * pct_chord) * np.ones(self.n_control_surfaces, dtype=int)
         self.control_surface_type = np.ones(self.n_control_surfaces, dtype=int) * (2 * kwargs.get('controlled', False))
-        self.control_surface_hinge_coord = np.zeros_like(self.control_surface_type, dtype=float)  # do I need this for cs to function?
+        self.control_surface_hinge_coord = np.full_like(self.control_surface_type, pct_chord*self.m, dtype=int)  # do I need this for cs to function?
 
     def generate_aero(self):
 
@@ -162,6 +162,8 @@ class PazyAero:
                     'control_surface_deflection', data=self.control_surface_deflection)
                 control_surface_chord_input = h5file.create_dataset(
                     'control_surface_chord', data=self.control_surface_chord)
+                control_surface_hinge_coord_input = h5file.create_dataset(
+                    'control_surface_hinge_coords', data=self.control_surface_hinge_coord)
             # if airfoil_efficiency is not None:
             #     a_eff_handle = h5file.create_dataset(
             #         'airfoil_efficiency', data=airfoil_efficiency)

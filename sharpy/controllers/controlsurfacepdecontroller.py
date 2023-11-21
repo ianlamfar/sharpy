@@ -274,6 +274,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                               raw_command,
                               control_command))
         self.log.flush()
+        print(f'PDEControl -- error: {self.prescribed_input_time_history[i_current - 1]-self.real_state_input_history[i_current - 1]:.3f}, raw: {np.degrees(raw_command):.3f} [{np.degrees(detail[0]):.3f}P|{np.degrees(detail[1]):.3f}I], capped: {np.degrees(control_command):.3f}')
         # print(controlled_state['structural'].psi[-1, -1, 1], controlled_state['aero'].control_surface_deflection)
         return controlled_state
 
@@ -329,13 +330,12 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                 lift_distribution[inode, 2] = struct_tstep.pos[inode, 2]  # z
                 lift_distribution[inode, 1] = struct_tstep.pos[inode, 1]  # y
                 lift_distribution[inode, 0] = struct_tstep.pos[inode, 0]  # x
-        
         lift = np.sum(lift_distribution[:, -1])  # total lift force
         u = np.linalg.norm(urel)
         if u > 0.0:
-            output = np.sign(lift) * lift_force / (0.5 * self.settings['rho'] * (u**2) * total_area)
+            output = lift / (0.5 * self.settings['rho'] * (u**2) * total_area)
         else: output = 0.0
-        
+
         return output
 
     def controller_wrapper(self,

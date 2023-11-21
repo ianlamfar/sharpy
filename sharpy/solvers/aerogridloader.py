@@ -134,7 +134,7 @@ class AerogridLoader(BaseSolver):
         with h5.File(self.aero_file_name, 'r') as aero_file_handle:
             # store files in dictionary
             self.aero_data_dict = h5utils.load_h5_in_dict(aero_file_handle)
-
+        print(self.aero_data_dict, self.aero_file_name)
     def run(self, **kwargs):
         self.data.aero = aerogrid.Aerogrid()
         self.data.aero.generate(self.aero_data_dict,

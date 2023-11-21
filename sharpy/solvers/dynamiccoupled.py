@@ -326,12 +326,12 @@ class DynamicCoupled(BaseSolver):
 
         # print information header
         if self.print_info:
-            self.residual_table = cout.TablePrinter(8, 12, ['g', 'f', 'g', 'f', 'f', 'f', 'e', 'e'])
+            self.residual_table = cout.TablePrinter(9, 11, ['g', 'f', 'g', 'f', 'f', 'f', 'e', 'e', 'f'])
             self.residual_table.field_length[0] = 5
             self.residual_table.field_length[1] = 6
             self.residual_table.field_length[2] = 4
             self.residual_table.print_header(['ts', 't', 'iter', 'struc ratio', 'iter time', 'residual vel',
-                                              'FoR_vel(x)', 'FoR_vel(z)'])
+                                              'FoR_vel(x)', 'FoR_vel(z)', 'θ(deg)'])
 
         # Define the function to correct aerodynamic forces
         if self.settings['correct_forces_method'] != '':
@@ -695,8 +695,10 @@ class DynamicCoupled(BaseSolver):
                                                 print_res,
                                                 structural_kstep.for_vel[0],
                                                 structural_kstep.for_vel[2],
-                                                np.sum(structural_kstep.steady_applied_forces[:, 0]),
-                                                np.sum(structural_kstep.steady_applied_forces[:, 2])])
+                                                # np.sum(structural_kstep.steady_applied_forces[:, 0]),
+                                                # np.sum(structural_kstep.steady_applied_forces[:, 2]),
+                                                np.degrees(structural_kstep.psi[structural_kstep.num_elem//2-1, -1, 1]),
+                                                ])
             (self.data.structure.timestep_info[self.data.ts].total_forces[0:3],
              self.data.structure.timestep_info[self.data.ts].total_forces[3:6]) = (
                         self.structural_solver.extract_resultants(self.data.structure.timestep_info[self.data.ts]))

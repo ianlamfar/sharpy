@@ -300,7 +300,7 @@ if __name__== '__main__':
     # u_inf_vec = [83]
 
     alpha = 5
-    gravity_on = False
+    gravity_on = True
     skin_on = False
     trailing_edge_weight = False
 

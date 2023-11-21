@@ -76,11 +76,12 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
         'log_file': pazy.case_name + '.log'}
 
     pazy.config['BeamLoader'] = {
-        'unsteady': False,
+        'unsteady': True,
         'orientation': algebra.euler2quat([0., alpha_deg * np.pi / 180, 0])}
 
+    # csgen_settings = {'dt': dt, 'deflection_file': ''}
     pazy.config['AerogridLoader'] = {
-        'unsteady': False,
+        'unsteady': True,
         'aligned_grid': 'on',
         'mstar': M_star_fact * M,
         'freestream_dir': u_inf_direction,
@@ -89,6 +90,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                                        'u_inf_direction': u_inf_direction,
                                        'dt': dt},
         # 'control_surface_deflection': model_settings['cs_deflection'],
+        # 'control_surface_deflection_generator_settings': []
         }
 
     # pazy.config['StaticUvlm'] = {
@@ -167,66 +169,6 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     #                                     'structure_variables': ['pos'],
     #                                     'structure_nodes': list(range(0, pazy.structure.n_node//2))}
 
-    # pazy.config['Modal'] = {
-    #                         # 'folder': route_test_dir + output_folder,
-    #                         'NumLambda': 20,
-    #                         'rigid_body_modes': 'off',
-    #                         'print_matrices': 'off',
-    #                         # 'keep_linear_matrices': 'on',
-    #                         # 'write_dat': 'on',
-    #                         'continuous_eigenvalues': 'off',
-    #                         'write_modes_vtk': 'on',
-    #                         'use_undamped_modes': 'on'}
-
-    # pazy.config['LinearAssembler'] = {'linear_system': 'LinearAeroelastic',
-    #                                   # 'modal_tstep': 0,
-    #                                   'linear_system_settings': {
-    #                                       'beam_settings': {'modal_projection': 'on',
-    #                                                         'inout_coords': 'modes',
-    #                                                         'discrete_time': 'on',
-    #                                                         'newmark_damp': 0.5e-4,
-    #                                                         'discr_method': 'newmark',
-    #                                                         'dt': dt,
-    #                                                         'proj_modes': 'undamped',
-    #                                                         # 'use_euler': 'off',
-    #                                                         'num_modes': num_modes,
-    #                                                         'print_info': 'off',
-    #                                                         'gravity': gravity_on,
-    #                                                         'remove_sym_modes': 'on',
-    #                                                         'remove_dofs': []},
-    #                                       'aero_settings': {'dt': dt,
-    #                                                         'ScalingDict': {'length': 0.5 * pazy.aero.main_chord,
-    #                                                                         'speed': u_inf,
-    #                                                                         'density': rho},
-    #                                                         'integr_order': 2,
-    #                                                         'density': rho,
-    #                                                         'remove_predictor': 'off',
-    #                                                         'use_sparse': 'on',
-    #                                                         # 'rigid_body_motion': 'off',
-    #                                                         # 'use_euler': 'off',
-    #                                                         'remove_inputs': ['u_gust'],
-    #                                                         'vortex_radius': 1e-8,
-    #                                                         'rom_method': ['Krylov'],
-    #                                                         'rom_method_settings':
-    #                                                             {'Krylov':
-    #                                                                  {'frequency': [0.],
-    #                                                                   'algorithm': 'mimo_rational_arnoldi',
-    #                                                                   'r': 6,
-    #                                                                   'single_side': 'observability',
-    #                                                                   }
-    #                                                              }
-    #                                                         },
-    #                                     #   'rigid_body_motion': False,
-    #                                       }
-    #                                   }
-
-    # pazy.config['AsymptoticStability'] = {'print_info': True,
-    #                                     #   'folder': route_test_dir + output_folder,
-    #                                       'export_eigenvalues': 'on',
-    #                                       'target_system': ['aeroelastic', 'aerodynamic', 'structural'],
-    #                                       'reference_velocity': u_inf,
-    #                                       }
-
     pazy.config['SaveParametricCase'] = {
                                         #  'folder': route_test_dir + output_folder + pazy.case_name + '/',
                                          'save_case': 'off',
@@ -238,9 +180,11 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                                                   'delta_curved': 1e-1,  # default 1e-6
                                                   'min_delta': 1e-3,  # default 1e-8
                                                   'newmark_damp': 5e-3,  # default 5e-4
+                                                  'relaxation_factor': 0.3, # default 0.3
                                                   'gravity_on': gravity_on,
                                                   'gravity': 9.81,
                                                   'num_steps': n_tsteps,
+                                                  'num_load_steps': 4, # default 1
                                                   'dt': dt}
     
     settings['StepUvlm'] = {'print_info': 'on',
@@ -261,7 +205,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                            'vortex_radius': 1e-10}
 
     settings['DynamicCoupled'] = {'print_info': 'on',
-                                  'structural_substeps': 0,  # default 10, major source of slowdown
+                                  'structural_substeps': 0,  # default 10, major source of slowdown, 0 is fully coupled
                                   'dynamic_relaxation': 'on',
                                   'cleanup_previous_solution': 'on',
                                   'structural_solver': 'NonLinearDynamicPrescribedStep',
@@ -270,9 +214,9 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                                   'aero_solver_settings': settings['StepUvlm'],
                                   'fsi_substeps': 200,
                                   'fsi_tolerance': 1e-4,  # default 1e-6
-                                  'relaxation_factor': 0,  # default 0.2, relaxation causes slowdown but enhances stability
+                                  'relaxation_factor': 0.2,  # default 0.2, relaxation causes slowdown but enhances stability
                                   'minimum_steps': 0,  # min steps before convergence
-                                  'relaxation_steps': 0,  # default 150
+                                  'relaxation_steps': 150,  # default 150
                                   'final_relaxation_factor': 0.0,
                                   'n_time_steps': n_tsteps,
                                   'dt': dt,
@@ -297,7 +241,6 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     
     pazy.config['DynamicCoupled'] = settings['DynamicCoupled']
     pazy.config.write()
-    print(pazy.structure.lumped_mass)
     out = sharpy.sharpy_main.main(['', pazy.case_route + '/' + pazy.case_name + '.sharpy'])
     return out
 
