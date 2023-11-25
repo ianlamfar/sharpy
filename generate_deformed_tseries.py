@@ -60,6 +60,7 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
         'flow':
             ['BeamLoader',
              'AerogridLoader',
+            #  'StaticTrim',
             #  'StaticCoupled',
             #  'AerogridPlot',
             #  'BeamPlot',
@@ -108,38 +109,58 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     #     # 'rollup_tolerance': 1e-4
     #     }
 
-    # settings = dict()
-    # settings['NonLinearStatic'] = {'print_info': 'off',
-    #                                'max_iterations': 200,
-    #                                'num_load_steps': 5,
-    #                                'delta_curved': 1e-6,
-    #                                'min_delta': 1e-8,
-    #                                'gravity_on': gravity_on,
-    #                                'gravity': 9.81}
-
-    # pazy.config['StaticCoupled'] = {
-    #     'print_info': 'on',
-    #     'max_iter': 200,
-    #     'n_load_steps': 4,  # default 4
-    #     'tolerance': 1e-5,
-    #     'relaxation_factor': 0.1,
-    #     'aero_solver': 'StaticUvlm',
-    #     'aero_solver_settings': {
-    #         'rho': rho,
-    #         'print_info': 'off',
-    #         # 'horseshoe': 'off',
-    #         'num_cores': num_cores,
-    #         # 'n_rollup': 0,
-    #         # 'rollup_dt': dt,
-    #         # 'rollup_aic_refresh': 1,
-    #         # 'rollup_tolerance': 1e-4,
-    #         'vortex_radius': 1e-7,
-    #         'velocity_field_generator': 'SteadyVelocityField',
-    #         'velocity_field_input': {
-    #             'u_inf': u_inf,
-    #             'u_inf_direction': u_inf_direction}},
-    #     'structural_solver': 'NonLinearStatic',
-    #     'structural_solver_settings': settings['NonLinearStatic']}
+    settings = dict()
+    settings['StaticCoupled'] = {
+        'print_info': True,
+        'max_iter': 200,
+        'n_load_steps': 4,  # default 4
+        'tolerance': 1e-4,
+        'relaxation_factor': 0.1,
+        'aero_solver': 'StaticUvlm',
+        'aero_solver_settings': {
+            'rho': rho,
+            'print_info': True,
+            # 'horseshoe': 'off',
+            'num_cores': num_cores,
+            # 'n_rollup': 0,
+            # 'rollup_dt': dt,
+            # 'rollup_aic_refresh': 1,
+            # 'rollup_tolerance': 1e-4,
+            'vortex_radius': 1e-7,
+            'velocity_field_generator': 'SteadyVelocityField',
+            'velocity_field_input': {
+                'u_inf': u_inf,
+                'u_inf_direction': u_inf_direction}},
+        'structural_solver': 'NonLinearStatic',
+        'structural_solver_settings': {'print_info': True,
+                                        'max_iterations': 200,
+                                        'num_load_steps': 4,
+                                        'delta_curved': 1e-6,
+                                        'min_delta': 1e-8,
+                                        'gravity_on': gravity_on,
+                                        'gravity': 9.81}}
+    
+    pazy.config['StaticTrim'] = {'print_info': True,
+                                 'solver': 'StaticCoupled',
+                                 'solver_settings': settings['StaticCoupled'],
+                                 'max_iter': 100,  # default 100
+                                 'fz_tolerance': 1e-2,  # default 1e-2
+                                 'fx_tolerance': 1e-2,  # default 1e-2
+                                 'm_tolerance': 1e-2,  # default 1e-2
+                                 'tail_cs_index': [0, 1],
+                                 'thrust_nodes': [0],
+                                 'has_cs': False,
+                                 'has_thrust': False,
+                                 'initial_alpha': np.radians(alpha_deg),
+                                 'initial_deflection': 0.0,
+                                 'initial_thrust': 0.0,
+                                 'initial_angle_eps': np.radians(0.01),
+                                 'initial_thrust_eps': 0.1,
+                                 'relaxation_factor': 0.2,  # default 0.2
+                                 'has_cs': False,
+                                 'has_thrust': False,
+                                 'save_info': True,
+                                 }
 
     # pazy.config['AerogridPlot'] = {
     #                             #    'folder': route_test_dir + output_folder,
@@ -213,8 +234,8 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                                   'aero_solver': 'StepUvlm',
                                   'aero_solver_settings': settings['StepUvlm'],
                                   'fsi_substeps': 200,
-                                  'fsi_tolerance': 1e-4,  # default 1e-6
-                                  'relaxation_factor': 0.2,  # default 0.2, relaxation causes slowdown but enhances stability
+                                  'fsi_tolerance': 1e-3,  # default 1e-6
+                                  'relaxation_factor': 0.0,  # default 0.2, relaxation causes slowdown but enhances stability
                                   'minimum_steps': 0,  # min steps before convergence
                                   'relaxation_steps': 150,  # default 150
                                   'final_relaxation_factor': 0.0,

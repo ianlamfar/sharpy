@@ -53,6 +53,12 @@ class StaticTrim(BaseSolver):
     settings_types['m_tolerance'] = 'float'
     settings_default['m_tolerance'] = 0.01
     settings_description['m_tolerance'] = 'Tolerance in pitching moment'
+    
+    settings_types['has_cs'] = 'bool'
+    settings_default['has_cs'] = True
+
+    settings_types['has_thrust'] = 'bool'
+    settings_default['has_thrust'] = True
 
     settings_types['tail_cs_index'] = ['int', 'list(int)']
     settings_default['tail_cs_index'] = 0
@@ -204,7 +210,7 @@ class StaticTrim(BaseSolver):
                  self.output_history[self.i_iter][2]) = self.evaluate(self.input_history[self.i_iter][0],
                                                                       self.input_history[self.i_iter][1],
                                                                       self.input_history[self.i_iter][2])
-
+                print('output')
                 # check for convergence (in case initial values are ok)
                 if all(self.convergence(self.output_history[self.i_iter][0],
                                         self.output_history[self.i_iter][1],
@@ -217,7 +223,7 @@ class StaticTrim(BaseSolver):
                 (l, m, d) = self.evaluate(self.input_history[self.i_iter][0] + self.settings['initial_angle_eps'],
                                           self.input_history[self.i_iter][1],
                                           self.input_history[self.i_iter][2])
-
+                print('alpha_grad')
                 self.gradient_history[self.i_iter][0] = ((l - self.output_history[self.i_iter][0]) /
                                                          self.settings['initial_angle_eps'])
 
@@ -225,7 +231,7 @@ class StaticTrim(BaseSolver):
                 (l, m, d) = self.evaluate(self.input_history[self.i_iter][0],
                                           self.input_history[self.i_iter][1] + self.settings['initial_angle_eps'],
                                           self.input_history[self.i_iter][2])
-
+                print('cs_grad')
                 self.gradient_history[self.i_iter][1] = ((m - self.output_history[self.i_iter][1]) /
                                                          self.settings['initial_angle_eps'])
 
@@ -234,10 +240,9 @@ class StaticTrim(BaseSolver):
                                           self.input_history[self.i_iter][1],
                                           self.input_history[self.i_iter][2] +
                                           self.settings['initial_thrust_eps'])
-
+                print('thrust_grad')
                 self.gradient_history[self.i_iter][2] = ((d - self.output_history[self.i_iter][2]) /
                                                          self.settings['initial_thrust_eps'])
-
                 continue
 
             # if not all(np.isfinite(self.gradient_history[self.i_iter - 1]))
@@ -256,8 +261,9 @@ class StaticTrim(BaseSolver):
                                                       (self.output_history[self.i_iter - 1][0] /
                                                        self.gradient_history[self.i_iter - 1][0]))
 
-            if convergence[1]:
+            if convergence[1] or not self.settings['has_cs']:
                 # m is converged, don't change it
+                print('cs')
                 self.input_history[self.i_iter][1] = self.input_history[self.i_iter - 1][1]
                 self.gradient_history[self.i_iter][1] = self.gradient_history[self.i_iter - 1][1]
             else:
@@ -266,7 +272,8 @@ class StaticTrim(BaseSolver):
                                                       (self.output_history[self.i_iter - 1][1] /
                                                        self.gradient_history[self.i_iter - 1][1]))
 
-            if convergence[2]:
+            if convergence[2] or not self.settings['has_thrust']:
+                print('thrust')
                 # fx is converged, don't change it
                 self.input_history[self.i_iter][2] = self.input_history[self.i_iter - 1][2]
                 self.gradient_history[self.i_iter][2] = self.gradient_history[self.i_iter - 1][2]
@@ -330,9 +337,9 @@ class StaticTrim(BaseSolver):
         # cout.cout_wrap('Thrust: ' + str(thrust), 2)
         # modify the trim in the static_coupled solver
         self.solver.change_trim(alpha,
-                                thrust,
+                                thrust * self.settings['has_thrust'],
                                 self.settings['thrust_nodes'],
-                                deflection_gamma - alpha,
+                                (deflection_gamma - alpha) * self.settings['has_cs'],
                                 self.settings['tail_cs_index'])
         # run the solver
         self.solver.run()

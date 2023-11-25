@@ -33,9 +33,9 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_default['I'] = 0.0
     settings_description['I'] = 'Integral gain of the controller'
 
-    # settings_types['D'] = 'float'
-    # settings_default['D'] = 0.0
-    # settings_description['D'] = 'Differential gain of the controller'
+    settings_types['D'] = 'float'
+    settings_default['D'] = 0.0
+    settings_description['D'] = 'Differential gain of the controller'
 
     # settings_types['input_type'] = 'str'
     # settings_default['input_type'] = 'lift'
@@ -159,7 +159,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         # Init PID controller
         self.controller_implementation = control_utils.PDE(self.settings['P'],
                                                            self.settings['I'],
-                                                        #    self.settings['D'],
+                                                           self.settings['D'],
                                                            self.settings['dt'])
 
         # check that controlled_surfaces_coeff has the correct number of parameters
@@ -218,7 +218,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
             current_input=self.real_state_input_history,
             control_param={'P': self.settings['P'],
                            'I': self.settings['I'],
-                        #    'D': self.settings['D'],
+                           'D': self.settings['D'],
                            },
             i_current=i_current,
             lag_index=lag_index)
@@ -274,7 +274,11 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                               raw_command,
                               control_command))
         self.log.flush()
-        print(f'PDEControl -- error: {self.prescribed_input_time_history[i_current - 1]-self.real_state_input_history[i_current - 1]:.3f}, raw: {np.degrees(raw_command):.3f} [{np.degrees(detail[0]):.3f}P|{np.degrees(detail[1]):.3f}I], capped: {np.degrees(control_command):.3f}')
+        error = self.prescribed_input_time_history[i_current - 1]-self.real_state_input_history[i_current - 1]
+        raw = np.degrees(raw_command)
+        control = np.degrees(detail)
+        cap_control = np.degrees(control_command)
+        print(f'PDEControl -- error: {error:+.3f}, raw: {raw:+.3f} [{control[0]:+.3f}P|{control[1]:+.3f}I|{control[2]:+.3f}D], capped: {cap_control:+.3f}')
         # print(controlled_state['structural'].psi[-1, -1, 1], controlled_state['aero'].control_surface_deflection)
         return controlled_state
 
@@ -303,6 +307,10 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         lift_distribution = np.zeros((N_nodes, numb_col))
         # get rotation matrix
         cga = algebra.quat2rotation(struct_tstep.quat)
+        
+        header += ", y/s, cl"
+        numb_col += 2
+        lift_distribution = np.concatenate((lift_distribution, np.zeros((N_nodes, 2))), axis=1)
 
         total_area = 0
         for inode in range(N_nodes):
@@ -330,11 +338,31 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                 lift_distribution[inode, 2] = struct_tstep.pos[inode, 2]  # z
                 lift_distribution[inode, 1] = struct_tstep.pos[inode, 1]  # y
                 lift_distribution[inode, 0] = struct_tstep.pos[inode, 0]  # x
-        lift = np.sum(lift_distribution[:, -1])  # total lift force
-        u = np.linalg.norm(urel)
-        if u > 0.0:
-            output = lift / (0.5 * self.settings['rho'] * (u**2) * total_area)
-        else: output = 0.0
+                
+                lift_distribution[inode, 4] = lift_distribution[inode, 1]/span
+                # Get lift coefficient
+                u = np.linalg.norm(urel)
+                if u > 0:
+                    lift_distribution[inode, 5] = (np.sign(lift_force) *
+                                                   np.linalg.norm(lift_force) /
+                                                   (0.5 * self.settings['rho'] *
+                                                    (u ** 2) * span * chord))  # strip_area[i_surf][local_node])
+                else:
+                    lift_distribution[inode, 5] = 0
+                # Check if shared nodes from different surfaces exist (e.g. two wings joining at symmetry plane)
+                # Leads to error since panel area just donates for half the panel size while lift forces is summed up
+                lift_distribution[inode, 5] /= len(self.data.aero.struct2aero_mapping[inode])
+        
+        
+        lift = np.sum(lift_distribution[:, 3])  # total lift force
+        # u = np.linalg.norm(urel)
+        # if u > 0.0:
+        #     output = lift / (0.5 * self.settings['rho'] * (u**2) * total_area)
+        # else: output = 0.0
+        
+        output = np.mean(lift_distribution[:, 5])
+        # print(lift_distribution[:, -1], output, np.mean(lift_distribution))
+        # output = np.sqrt(np.abs(output)) * np.sign(output)
 
         return output
 

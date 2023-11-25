@@ -293,16 +293,16 @@ def generate_pazy(u_inf, case_name, output_folder='/output/', cases_subfolder=''
 
 if __name__== '__main__':
     from datetime import datetime
-    vmin = 10
-    vmax = 85
+    vmin = 20
+    vmax = 100
     vnum = (vmax - vmin) + 1
     u_inf_vec = np.linspace(vmin, vmax, vnum)
     # u_inf_vec = [83]
 
-    alpha = 5
-    gravity_on = True
-    skin_on = False
-    trailing_edge_weight = False
+    alpha = 0
+    gravity_on = False
+    skin_on = True
+    trailing_edge_weight = True
 
     M = 4
     N = 1

@@ -137,17 +137,19 @@ class PDE(object):
     #     state[i] = np.sum(feedback[:i])
     #     controller.set_point(set_point[i])
     #     feedback[i] = controller(state[i])
-    def __init__(self, gain_p, gain_i, dt):
+    def __init__(self, gain_p, gain_i, gain_d, dt):
         self._point = 0.0
 
         self._dt = dt
         self._kp = gain_p
         self._ki = gain_i
-
+        self._kd = gain_d
+        
         self._accumulated_integral = 0.0
         self._integral_limits = np.array([-1., 1.])*10000
         self._error_history = np.zeros((3,))
 
+        self._derivator = second_order_fd
         self._derivative_limits = np.array([-1, 1])*10000
 
         self._n_calls = 0
@@ -167,6 +169,7 @@ class PDE(object):
         self._n_calls += 1
         actuation = 0.0
         error = self._point - state
+        # error = np.sqrt(np.abs(error)) * np.sign(error)
         
         # displace previous errors one position to the left
         self._error_history = np.roll(self._error_history, -1)
@@ -198,5 +201,12 @@ class PDE(object):
 
         actuation += self._accumulated_integral*self._ki
         detailed[1] = self._accumulated_integral*self._ki
+        
+        # Derivative gain
+        derivative = self._derivator(self._error_history, self._n_calls, self._dt)
+        derivative = max(derivative, self._derivative_limits[0])
+        derivative = min(derivative, self._derivative_limits[1])
+        actuation += derivative*self._kd
+        detailed[2] = derivative*self._kd
 
         return actuation, detailed
