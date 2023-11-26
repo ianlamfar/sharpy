@@ -93,7 +93,7 @@ ENV/
 
 # project dependent stuff
 lib/*.so
-output/*
+# output/*
 .idea
 
 # figure folders
@@ -103,7 +103,7 @@ output/*
 *.vtu
 
 
-output*/
+# output*/
 
 snapshots/
 

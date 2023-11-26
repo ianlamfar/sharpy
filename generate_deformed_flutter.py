@@ -294,7 +294,7 @@ def generate_pazy(u_inf, case_name, output_folder='/output/', cases_subfolder=''
 if __name__== '__main__':
     from datetime import datetime
     vmin = 20
-    vmax = 100
+    vmax = 200
     vnum = (vmax - vmin) + 1
     u_inf_vec = np.linspace(vmin, vmax, vnum)
     # u_inf_vec = [83]
@@ -304,9 +304,9 @@ if __name__== '__main__':
     skin_on = True
     trailing_edge_weight = True
 
-    M = 4
+    M = 16
     N = 1
-    Ms = 10
+    Ms = 20
 
     batch_log = 'batch_log_alpha{:04g}'.format(alpha*100)
     
