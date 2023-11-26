@@ -89,6 +89,8 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_default['rho'] = 1.225
     settings_description['rho'] = 'density for CL calculation'
 
+    settings_types['error_pow'] = 'float'
+    settings_default['error_pow'] = 1.0
 
     # supported_input_types = ['pitch', 'roll', 'pos_', 'tip rotation', 'lift']
 
@@ -361,7 +363,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         # else: output = 0.0
         
         output = np.mean(lift_distribution[:, 5])
-        # print(lift_distribution[:, -1], output, np.mean(lift_distribution))
+        # print(lift_distribution[:, -1].shape, (self.data.aero.aero_dict['control_surface'] != 0).shape)
         # output = np.sqrt(np.abs(output)) * np.sign(output)
 
         return output
@@ -373,7 +375,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                            i_current,
                            lag_index):
         self.controller_implementation.set_point(required_input[i_current - 1])
-        control_param, detailed_control_param = self.controller_implementation(current_input[lag_index - 1])
+        control_param, detailed_control_param = self.controller_implementation(current_input[lag_index - 1], power=self.settings['error_pow'])
         return (control_param, detailed_control_param)
 
     def __exit__(self, *args):

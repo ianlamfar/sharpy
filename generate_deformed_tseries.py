@@ -234,10 +234,10 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
                                   'aero_solver': 'StepUvlm',
                                   'aero_solver_settings': settings['StepUvlm'],
                                   'fsi_substeps': 200,
-                                  'fsi_tolerance': 1e-3,  # default 1e-6
+                                  'fsi_tolerance': 1e-2,  # default 1e-6
                                   'relaxation_factor': 0.0,  # default 0.2, relaxation causes slowdown but enhances stability
                                   'minimum_steps': 0,  # min steps before convergence
-                                  'relaxation_steps': 150,  # default 150
+                                  'relaxation_steps': 0,  # default 150
                                   'final_relaxation_factor': 0.0,
                                   'n_time_steps': n_tsteps,
                                   'dt': dt,

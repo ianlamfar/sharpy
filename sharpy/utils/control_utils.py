@@ -165,10 +165,10 @@ class PDE(object):
     def reset_integrator(self):
         self._accumulated_integral = 0.0
 
-    def __call__(self, state):
+    def __call__(self, state, power=1):
         self._n_calls += 1
         actuation = 0.0
-        error = self._point - state
+        error = np.power(self._point - state, power)
         # error = np.sqrt(np.abs(error)) * np.sign(error)
         
         # displace previous errors one position to the left
@@ -182,10 +182,11 @@ class PDE(object):
 
         # Integral gain
         aux_acc_int = self._accumulated_integral + error*self._dt
-        if aux_acc_int < self._integral_limits[0]:
-            aux_acc_int = self._integral_limits[0]
-        elif aux_acc_int > self._integral_limits[1]:
-            aux_acc_int = self._integral_limits[1]
+        # if aux_acc_int < self._integral_limits[0]:
+        #     aux_acc_int = self._integral_limits[0]
+        # elif aux_acc_int > self._integral_limits[1]:
+        #     aux_acc_int = self._integral_limits[1]
+        aux_acc_int = min(max(aux_acc_int, self._integral_limits[0]), self._integral_limits[1])
 
         if self._anti_windup_lim is not None:
             # Apply anti wind up
@@ -204,8 +205,8 @@ class PDE(object):
         
         # Derivative gain
         derivative = self._derivator(self._error_history, self._n_calls, self._dt)
-        derivative = max(derivative, self._derivative_limits[0])
-        derivative = min(derivative, self._derivative_limits[1])
+        derivative = min(max(derivative, self._derivative_limits[0]), self._derivative_limits[1])
+        # derivative = min(derivative, self._derivative_limits[1])
         actuation += derivative*self._kd
         detailed[2] = derivative*self._kd
 
