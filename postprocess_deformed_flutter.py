@@ -86,8 +86,11 @@ def main(M=16, N=1, Ms=20, alpha=[5], skin=False, te=False):
                 'pazy_M16N1Ms20_alpha{:04g}_skin{:g}'.format(
                     alpha * 100, skin) for alpha in alpha_vec[1:]]
 
+        # print(sharpy_output_folder, source_cases)
         results = prepare_cases_db(sharpy_output_folder, source_cases, alpha_vec)
+        # print(results)
         for case in results:
+            # print(case)
             if len(case.cases['aeroelastic'].cases) == 0:
                 continue
             flutter_speeds = save_eigenvalues(case, output_folder)

@@ -299,7 +299,7 @@ if __name__== '__main__':
     u_inf_vec = np.linspace(vmin, vmax, vnum)
     # u_inf_vec = [83]
 
-    alpha = 0
+    alpha = 0.01
     gravity_on = False
     skin_on = True
     trailing_edge_weight = True
