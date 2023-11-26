@@ -301,8 +301,8 @@ if __name__== '__main__':
 
     alpha = 0.01
     gravity_on = False
-    skin_on = True
-    trailing_edge_weight = True
+    skin_on = False
+    trailing_edge_weight = False
 
     M = 16
     N = 1
@@ -335,7 +335,7 @@ if __name__== '__main__':
             dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
             with open('./output/pazy/{:s}.txt'.format(batch_log), 'a') as f:
                 f.write('%s Ran case %i :::: u_inf = %f\n\n' % (dt_string, i, u_inf))
-        except AssertionError:
+        except:
             now = datetime.now()
             dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
             with open('./output/pazy/{:s}.txt'.format(batch_log), 'a') as f:
