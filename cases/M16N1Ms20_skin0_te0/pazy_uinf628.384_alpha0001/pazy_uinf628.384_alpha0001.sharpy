@@ -1,0 +1,112 @@
+[SHARPy]
+flow = BeamLoader, AerogridLoader, DynamicCoupled, SaveParametricCase
+case = pazy_uinf628.384_alpha0001
+route = /home/ianlamfar/sharpy_control/cases//M16N1Ms20_skin0_te0//pazy_uinf628.384_alpha0001
+write_screen = on
+write_log = on
+log_folder = output/pazy_M16N1Ms20_alpha0001_skin0_te0/pazy_uinf628.384_alpha0001/
+log_file = pazy_uinf628.384_alpha0001.log
+[BeamLoader]
+unsteady = True
+orientation = [9.99999996e-01 0.00000000e+00 8.72664625e-05 0.00000000e+00]
+[AerogridLoader]
+unsteady = True
+aligned_grid = on
+mstar = 320
+freestream_dir = [1. 0. 0.]
+wake_shape_generator = StraightWake
+[[wake_shape_generator_input]]
+u_inf = 62.83836522597769
+u_inf_direction = [1. 0. 0.]
+dt = 9.946153082633378e-05
+[StaticTrim]
+print_info = True
+solver = StaticCoupled
+max_iter = 100
+fz_tolerance = 0.01
+fx_tolerance = 0.01
+m_tolerance = 0.01
+tail_cs_index = 0, 1
+thrust_nodes = 0,
+has_cs = False
+has_thrust = False
+initial_alpha = 0.00017453292519943296
+initial_deflection = 0.0
+initial_thrust = 0.0
+initial_angle_eps = 0.00017453292519943296
+initial_thrust_eps = 0.1
+relaxation_factor = 0.2
+save_info = True
+[[solver_settings]]
+print_info = True
+max_iter = 200
+n_load_steps = 4
+tolerance = 0.0001
+relaxation_factor = 0.1
+aero_solver = StaticUvlm
+structural_solver = NonLinearStatic
+[[[aero_solver_settings]]]
+rho = 1.225
+print_info = True
+num_cores = 32
+vortex_radius = 1e-07
+velocity_field_generator = SteadyVelocityField
+[[[[velocity_field_input]]]]
+u_inf = 62.83836522597769
+u_inf_direction = [1. 0. 0.]
+[[[structural_solver_settings]]]
+print_info = True
+max_iterations = 200
+num_load_steps = 4
+delta_curved = 1e-06
+min_delta = 1e-08
+gravity_on = False
+gravity = 9.81
+[SaveParametricCase]
+save_case = off
+[[parameters]]
+u_inf = 62.83836522597769
+[DynamicCoupled]
+print_info = on
+structural_substeps = 0
+dynamic_relaxation = on
+cleanup_previous_solution = on
+structural_solver = NonLinearDynamicPrescribedStep
+aero_solver = StepUvlm
+fsi_substeps = 200
+fsi_tolerance = 0.01
+relaxation_factor = 0.0
+minimum_steps = 0
+relaxation_steps = 0
+final_relaxation_factor = 0.0
+n_time_steps = 5027
+dt = 9.946153082633378e-05
+include_unsteady_force_contribution = off
+postprocessors = ,
+[[structural_solver_settings]]
+print_info = on
+max_iterations = 950
+delta_curved = 0.1
+min_delta = 0.001
+newmark_damp = 0.005
+relaxation_factor = 0.3
+gravity_on = False
+gravity = 9.81
+num_steps = 5027
+num_load_steps = 4
+dt = 9.946153082633378e-05
+[[aero_solver_settings]]
+print_info = on
+num_cores = 32
+convection_scheme = 2
+velocity_field_generator = SteadyVelocityField
+rho = 1.225
+n_time_steps = 5027
+dt = 9.946153082633378e-05
+gamma_dot_filtering = 3
+vortex_radius = 1e-10
+[[[velocity_field_input]]]
+u_inf = 62.83836522597769
+u_inf_direction = 1.0, 0.0, 0.0
+[[controller_id]]
+[[controller_settings]]

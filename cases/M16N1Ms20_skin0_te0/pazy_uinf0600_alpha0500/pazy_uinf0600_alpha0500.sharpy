@@ -1,0 +1,195 @@
+[SHARPy]
+flow = BeamLoader, AerogridLoader, StaticCoupled, AerogridPlot, BeamPlot, WriteVariablesTime, Modal, LinearAssembler, AsymptoticStability, SaveParametricCase
+case = pazy_uinf0600_alpha0500
+route = /home/ianlamfar/sharpy_control/cases//M16N1Ms20_skin0_te0//pazy_uinf0600_alpha0500
+write_screen = on
+write_log = on
+log_folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M16N1Ms20_alpha0500_skin0_te0/pazy_uinf0600_alpha0500/
+log_file = pazy_uinf0600_alpha0500.log
+[BeamLoader]
+unsteady = off
+orientation = [0.99904822 0.         0.04361939 0.        ]
+[AerogridLoader]
+unsteady = off
+aligned_grid = on
+mstar = 320
+freestream_dir = [1. 0. 0.]
+wake_shape_generator = StraightWake
+[[wake_shape_generator_input]]
+u_inf = 60.0
+u_inf_direction = [1. 0. 0.]
+dt = 0.00010416666666666667
+[StaticUvlm]
+rho = 1.225
+velocity_field_generator = SteadyVelocityField
+rollup_dt = 0.00010416666666666667
+print_info = on
+horseshoe = off
+num_cores = 32
+n_rollup = 0
+rollup_aic_refresh = 0
+rollup_tolerance = 0.0001
+[[velocity_field_input]]
+u_inf = 60.0
+u_inf_direction = [1. 0. 0.]
+[StaticCoupled]
+print_info = on
+max_iter = 200
+n_load_steps = 4
+tolerance = 1e-05
+relaxation_factor = 0.1
+aero_solver = StaticUvlm
+structural_solver = NonLinearStatic
+[[aero_solver_settings]]
+rho = 1.225
+print_info = off
+horseshoe = off
+num_cores = 32
+n_rollup = 0
+rollup_dt = 0.00010416666666666667
+rollup_aic_refresh = 1
+rollup_tolerance = 0.0001
+vortex_radius = 1e-07
+velocity_field_generator = SteadyVelocityField
+[[[velocity_field_input]]]
+u_inf = 60.0
+u_inf_direction = [1. 0. 0.]
+[[structural_solver_settings]]
+print_info = off
+max_iterations = 200
+num_load_steps = 5
+delta_curved = 1e-06
+min_delta = 1e-08
+gravity_on = False
+gravity = 9.81
+[AerogridPlot]
+include_rbm = off
+include_applied_forces = on
+minus_m_star = 0
+[AeroForcesCalculator]
+folder = /home/ianlamfar/sharpy_control//output/pazy/output/pazy_M16N1Ms20_alpha0500_skin0_te0//forces
+write_text_file = on
+text_file_name = pazy_uinf0600_alpha0500_aeroforces.csv
+screen_output = on
+unsteady = off
+[BeamPlot]
+include_rbm = off
+include_applied_forces = on
+[BeamCsvOutput]
+output_pos = on
+output_psi = on
+screen_output = on
+[WriteVariablesTime]
+structure_variables = pos,
+structure_nodes = 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29
+[Modal]
+NumLambda = 20
+rigid_body_modes = off
+print_matrices = off
+continuous_eigenvalues = off
+write_modes_vtk = on
+use_undamped_modes = on
+[LinearAssembler]
+linear_system = LinearAeroelastic
+[[linear_system_settings]]
+[[[beam_settings]]]
+modal_projection = on
+inout_coords = modes
+discrete_time = on
+newmark_damp = 5e-05
+discr_method = newmark
+dt = 0.00010416666666666667
+proj_modes = undamped
+num_modes = 16
+print_info = off
+gravity = False
+remove_sym_modes = on
+remove_dofs = ,
+[[[aero_settings]]]
+dt = 0.00010416666666666667
+integr_order = 2
+density = 1.225
+remove_predictor = off
+use_sparse = on
+remove_inputs = u_gust,
+vortex_radius = 1e-08
+rom_method = Krylov,
+[[[[ScalingDict]]]]
+length = 0.05
+speed = 60.0
+density = 1.225
+[[[[rom_method_settings]]]]
+[[[[[Krylov]]]]]
+frequency = 0.0,
+algorithm = mimo_rational_arnoldi
+r = 6
+single_side = observability
+[AsymptoticStability]
+print_info = True
+export_eigenvalues = True
+target_system = aeroelastic, aerodynamic, structural
+reference_velocity = 60.0
+[SaveParametricCase]
+save_case = off
+[[parameters]]
+u_inf = 60.0
+[DynamicCoupled]
+print_info = on
+structural_substeps = 10
+dynamic_relaxation = on
+clean_up_previous_solution = on
+structural_solver = NonLinearDynamicPrescribedStep
+aero_solver = StepUvlm
+fsi_substeps = 200
+fsi_tolerance = 1e-06
+relaxation_factor = 0.2
+minimum_steps = 1
+relaxation_steps = 150
+final_relaxation_factor = 0.0
+n_time_steps = 1
+dt = 0.00010416666666666667
+include_unsteady_force_contribution = off
+postprocessors = ,
+[[structural_solver_settings]]
+print_info = on
+max_iterations = 950
+delta_curved = 1e-06
+min_delta = 1e-08
+newmark_damp = 0.0005
+gravity_on = on
+gravity = 9.81
+num_steps = 1
+dt = 0.00010416666666666667
+[[aero_solver_settings]]
+print_info = on
+horseshoe = off
+num_cores = 32
+n_rollup = 100
+convection_scheme = 2
+rollup_dt = 0.00010416666666666667
+rollup_aic_refresh = 1
+rollup_tolerance = 0.0001
+velocity_field_generator = SteadyVelocityField
+rho = 1.225
+n_time_steps = 1
+dt = 0.00010416666666666667
+gamma_dot_filtering = 3
+vortex_radius = 1e-10
+[[[velocity_field_input]]]
+u_inf = 60.0
+u_inf_direction = 1.0, 0.0, 0.0
+[[postprocessors_settings]]
+[[[BeamLoads]]]
+folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M16N1Ms20_alpha0500_skin0_te0/
+csv_output = off
+[[[BeamPlot]]]
+folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M16N1Ms20_alpha0500_skin0_te0/
+include_rbm = on
+include_applied_forces = on
+[[[StallCheck]]]
+[[[AerogridPlot]]]
+u_inf = 60.0
+folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M16N1Ms20_alpha0500_skin0_te0/
+include_rbm = on
+include_applied_forces = on
+minus_m_star = 0

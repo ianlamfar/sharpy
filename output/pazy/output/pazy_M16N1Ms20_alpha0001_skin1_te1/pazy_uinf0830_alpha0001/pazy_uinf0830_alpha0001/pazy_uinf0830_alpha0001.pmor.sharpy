@@ -1,0 +1,5 @@
+[parameters]
+u_inf = 83.0
+[sim_info]
+case = pazy_uinf0830_alpha0001
+path_to_data = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M16N1Ms20_alpha0001_skin1_te1/pazy_uinf0830_alpha0001/pazy_uinf0830_alpha0001

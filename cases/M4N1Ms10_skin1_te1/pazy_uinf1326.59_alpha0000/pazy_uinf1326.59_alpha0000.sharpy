@@ -1,0 +1,69 @@
+[SHARPy]
+flow = BeamLoader, AerogridLoader, DynamicCoupled, SaveParametricCase
+case = pazy_uinf1326.59_alpha0000
+route = /home/ianlamfar/sharpy_control/cases//M4N1Ms10_skin1_te1//pazy_uinf1326.59_alpha0000
+write_screen = on
+write_log = on
+log_folder = output/pazy_M4N1Ms10_alpha0000_skin1_te1/pazy_uinf1326.59_alpha0000/
+log_file = pazy_uinf1326.59_alpha0000.log
+[BeamLoader]
+unsteady = True
+orientation = [9.99999996e-01 0.00000000e+00 8.72664625e-05 0.00000000e+00]
+[AerogridLoader]
+unsteady = True
+aligned_grid = on
+mstar = 40
+freestream_dir = [1. 0. 0.]
+wake_shape_generator = StraightWake
+[[wake_shape_generator_input]]
+u_inf = 132.65934380368284
+u_inf_direction = [1. 0. 0.]
+dt = 0.00018845261316079238
+[SaveParametricCase]
+save_case = off
+[[parameters]]
+u_inf = 132.65934380368284
+[DynamicCoupled]
+print_info = on
+structural_substeps = 0
+dynamic_relaxation = on
+cleanup_previous_solution = on
+structural_solver = NonLinearDynamicPrescribedStep
+aero_solver = StepUvlm
+fsi_substeps = 200
+fsi_tolerance = 0.0001
+relaxation_factor = 0.2
+minimum_steps = 0
+relaxation_steps = 150
+final_relaxation_factor = 0.0
+n_time_steps = 132
+dt = 0.00018845261316079238
+include_unsteady_force_contribution = off
+postprocessors = ,
+[[structural_solver_settings]]
+print_info = on
+max_iterations = 950
+delta_curved = 0.1
+min_delta = 0.001
+newmark_damp = 0.005
+relaxation_factor = 0.3
+gravity_on = False
+gravity = 9.81
+num_steps = 132
+num_load_steps = 4
+dt = 0.00018845261316079238
+[[aero_solver_settings]]
+print_info = on
+num_cores = 32
+convection_scheme = 2
+velocity_field_generator = SteadyVelocityField
+rho = 1.225
+n_time_steps = 132
+dt = 0.00018845261316079238
+gamma_dot_filtering = 3
+vortex_radius = 1e-10
+[[[velocity_field_input]]]
+u_inf = 132.65934380368284
+u_inf_direction = 1.0, 0.0, 0.0
+[[controller_id]]
+[[controller_settings]]
