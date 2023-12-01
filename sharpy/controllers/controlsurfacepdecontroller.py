@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.signal as sig
+import scipy
 
 import sharpy.utils.controller_interface as controller_interface
 import sharpy.utils.settings as settings
@@ -25,17 +27,54 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_default['time_history_input_file'] = None
     settings_description['time_history_input_file'] = 'Route and file name of the time history of desired state'
 
-    settings_types['P'] = 'float'
-    settings_default['P'] = None
-    settings_description['P'] = 'Proportional gain of the controller'
+    settings_types['LP'] = 'float'
+    settings_default['LP'] = 0.0
+    settings_description['LP'] = 'Proportional gain of the controller'
 
-    settings_types['I'] = 'float'
-    settings_default['I'] = 0.0
-    settings_description['I'] = 'Integral gain of the controller'
+    settings_types['LI'] = 'float'
+    settings_default['LI'] = 0.0
+    settings_description['LI'] = 'Integral gain of the controller'
 
-    settings_types['D'] = 'float'
-    settings_default['D'] = 0.0
-    settings_description['D'] = 'Differential gain of the controller'
+    settings_types['LD'] = 'float'
+    settings_default['LD'] = 0.0
+    settings_description['LD'] = 'First differential gain of the controller'
+    
+    settings_types['LD2'] = 'float'
+    settings_default['LD2'] = 0.0
+    settings_description['LD2'] = 'Second differential gain of the controller'
+
+    settings_types['HP'] = 'float'
+    settings_default['HP'] = 0.0
+    settings_description['HP'] = 'Proportional gain of the controller'
+
+    settings_types['HI'] = 'float'
+    settings_default['HI'] = 0.0
+    settings_description['HI'] = 'Integral gain of the controller'
+
+    settings_types['HD'] = 'float'
+    settings_default['HD'] = 0.0
+    settings_description['HD'] = 'First differential gain of the controller'
+    
+    settings_types['HD2'] = 'float'
+    settings_default['HD2'] = 0.0
+    settings_description['HD2'] = 'Second differential gain of the controller'
+    
+    settings_types['P_rampup_steps'] = 'int'
+    settings_default['P_rampup_steps'] = 1
+    
+    settings_types['I_rampup_steps'] = 'int'
+    settings_default['I_rampup_steps'] = 1
+    
+    settings_types['D_rampup_steps'] = 'int'
+    settings_default['D_rampup_steps'] = 1
+    
+    settings_types['D2_rampup_steps'] = 'int'
+    settings_default['D2_rampup_steps'] = 1
+    
+    settings_types['order'] = 'int'
+    settings_default['order'] = 2
+    settings_description['order'] = 'finite difference order for derivative'
+    
 
     # settings_types['input_type'] = 'str'
     # settings_default['input_type'] = 'lift'
@@ -146,10 +185,15 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         #     raise NotImplementedError()
 
         if self.settings['write_controller_log']:
-            self.log = open(self.settings['controller_log_route'] + self.controller_id + '_log.csv', 'w+')
-            self.log.write(('#' + 1 * '{:>2},' + 9 * '{:>12},' + '{:>12}\n').
-                           format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'noise', 'capping', 'raw', 'control'))
-            self.log.flush()
+            self.log_lp = open(self.settings['controller_log_route'] + self.controller_id + '_lp_log.csv', 'w+')
+            self.log_lp.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
+                           format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'D2control', 'noise', 'capping', 'raw', 'control'))
+            self.log_lp.flush()
+            
+            self.log_hp = open(self.settings['controller_log_route'] + self.controller_id + '_hp_log.csv', 'w+')
+            self.log_hp.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
+                           format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'D2control', 'noise', 'capping', 'raw', 'control'))
+            self.log_hp.flush()
 
         # save input time history
         try:
@@ -159,10 +203,21 @@ class ControlSurfacePdeController(controller_interface.BaseController):
             raise OSError('File {} not found in Controller'.format(self.settings['time_history_input_file']))
 
         # Init PID controller
-        self.controller_implementation = control_utils.PDE(self.settings['P'],
-                                                           self.settings['I'],
-                                                           self.settings['D'],
-                                                           self.settings['dt'])
+        self.controller_implementation_lp = control_utils.PDE(self.settings['LP'],
+                                                           self.settings['LI'],
+                                                           self.settings['LD'],
+                                                           self.settings['LD2'],
+                                                           self.settings['dt'],
+                                                           self.settings['order'],
+                                                           )
+        
+        self.controller_implementation_hp = control_utils.PDE(self.settings['HP'],
+                                                           self.settings['HI'],
+                                                           self.settings['HD'],
+                                                           self.settings['HD2'],
+                                                           self.settings['dt'],
+                                                           self.settings['order'],
+                                                           )
 
         # check that controlled_surfaces_coeff has the correct number of parameters
         # if len() == 1 and == 1.0, then expand to number of surfaces.
@@ -215,19 +270,69 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         i_current = len(self.real_state_input_history)
         # print(len(self.real_state_input_history), np.degrees(self.real_state_input_history[lag_index - 1]), i_current, lag_index)
         # apply it where needed.
-        control_command, detail = self.controller_wrapper(
+        
+        lp_input, hp_input = self.filter(self.real_state_input_history)
+
+        # lp_input = self.real_state_input_history - hp_input
+        
+        
+        # # hp_input = self.filter(self.real_state_input_history, 'hp')
+        # # lp_input = self.real_state_input_history - hp_input
+        
+        control_command_lp, detail_lp = self.controller_wrapper(
             required_input=self.prescribed_input_time_history,
-            current_input=self.real_state_input_history,
-            control_param={'P': self.settings['P'],
-                           'I': self.settings['I'],
-                           'D': self.settings['D'],
+            current_input=lp_input,
+            control_param={'P': self.settings['LP'],
+                           'I': self.settings['LI'],
+                           'D': self.settings['LD'],
+                           'D2': self.settings['LD2'],
+                           'P_steps': self.settings['P_rampup_steps'],
+                           'I_steps': self.settings['I_rampup_steps'],
+                           'D_steps': self.settings['D_rampup_steps'],
+                           'D2_steps': self.settings['D2_rampup_steps'],
                            },
             i_current=i_current,
-            lag_index=lag_index)
+            lag_index=lag_index,
+            mode='low',
+            )
+        
+        control_command_hp, detail_hp = self.controller_wrapper(
+            required_input=np.zeros_like(self.prescribed_input_time_history),
+            current_input=hp_input,
+            control_param={'P': self.settings['HP'],
+                           'I': self.settings['HI'],
+                           'D': self.settings['HD'],
+                           'D2': self.settings['HD2'],
+                           'P_steps': self.settings['P_rampup_steps'],
+                           'I_steps': self.settings['I_rampup_steps'],
+                           'D_steps': self.settings['D_rampup_steps'],
+                           'D2_steps': self.settings['D2_rampup_steps'],
+                           },
+            i_current=i_current,
+            lag_index=lag_index,
+            mode='high',
+            )
         
         # print(control_command, detail)
 
         # save raw command before applying noise and cap
+        # abs_err = abs(self.prescribed_input_time_history[-1] - self.real_state_input_history[-1])
+        # if abs_err > 0:
+        #     hp_weight = abs(hp_input[-1]) / abs_err
+        #     lp_weight = 1 - hp_weight
+        # else:
+        #     hp_weight = 0.5
+        #     lp_weight = 0.5
+        
+        hp_weight = 1
+        lp_weight = 1
+        
+        control_command_hp *= hp_weight
+        control_command_lp *= lp_weight
+        detail_hp *= hp_weight
+        detail_lp *= lp_weight
+        
+        control_command = control_command_lp + control_command_hp
         raw_command = control_command
 
         # adding white noise
@@ -251,36 +356,58 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         output_cap = self.settings['output_limit']
         cap = 0
         if output_cap != -1 and abs(control_command) >= abs(output_cap):
-            # if control_command < 0:
-            #     control_command = - abs(output_cap)
-            #     cap = -1
-            # elif control_command > 0:
-            #     control_command = abs(output_cap)
-            #     cap = 1
             cap = np.sign(control_command)
             control_command = cap * abs(output_cap)
 
         controlled_state['aero'].control_surface_deflection = (
             np.array(self.settings['controlled_surfaces_coeff']) * control_command)
 
-        self.log.write(('{:>6d},' + 9 * '{:>12.6f},' + '{:>12.6f}\n').
+        self.log_lp.write(('{:>6d},' + 10 * '{:>12.6f},' + '{:>12.6f}\n').
                        format(i_current,
                               i_current * self.settings['dt'],
                               self.prescribed_input_time_history[i_current - 1],
-                              self.real_state_input_history[i_current - 1],
-                              detail[0],
-                              detail[1],
-                              detail[2],
+                              lp_input[i_current - 1],
+                              detail_lp[0],
+                              detail_lp[1],
+                              detail_lp[2],
+                              detail_lp[3],
                               noise,
                               cap,
                               raw_command,
-                              control_command))
-        self.log.flush()
-        error = self.prescribed_input_time_history[i_current - 1]-self.real_state_input_history[i_current - 1]
+                              control_command_lp))
+        self.log_lp.flush()
+        
+        self.log_hp.write(('{:>6d},' + 10 * '{:>12.6f},' + '{:>12.6f}\n').
+                       format(i_current,
+                              i_current * self.settings['dt'],
+                              np.zeros_like(self.prescribed_input_time_history[i_current - 1]),
+                              hp_input[i_current - 1],
+                              detail_hp[0],
+                              detail_hp[1],
+                              detail_hp[2],
+                              detail_hp[3],
+                              noise,
+                              cap,
+                              raw_command,
+                              control_command_hp))
+        self.log_hp.flush()
+        
+        
+        
+        error_hp = -hp_input[i_current - 1]
+        error_lp = self.prescribed_input_time_history[i_current - 1] - lp_input[i_current - 1]
+        
+        # error = self.prescribed_input_time_history[i_current - 1] - self.real_state_input_history[i_current - 1]
+        error = error_hp + error_lp
+        
         raw = np.degrees(raw_command)
-        control = np.degrees(detail)
+        # control = np.degrees(detail)
+        control_lp = np.degrees(detail_lp)
+        control_hp = np.degrees(detail_hp)
         cap_control = np.degrees(control_command)
-        print(f'PDEControl -- error: {error:+.3f}, raw: {raw:+.3f} [{control[0]:+.3f}P|{control[1]:+.3f}I|{control[2]:+.3f}D], capped: {cap_control:+.3f}')
+        print(f'PDEControl -- error: {error:+.4e}, raw: {raw:+.4f}, capped: {cap_control:+.4f}')
+        print(f'LP -- error: {error_lp:+.4e}, [{control_lp[0]:+.4f}P|{control_lp[1]:+.4f}I|{control_lp[2]:+.4f}D|{control_lp[3]:+.4f}D2]')
+        print(f'HP -- error: {error_hp:+.4e}, [{control_hp[0]:+.4f}P|{control_hp[1]:+.4f}I|{control_hp[2]:+.4f}D|{control_hp[3]:+.4f}D2]')
         # print(controlled_state['structural'].psi[-1, -1, 1], controlled_state['aero'].control_surface_deflection)
         return controlled_state
 
@@ -373,10 +500,54 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                            current_input,
                            control_param,
                            i_current,
-                           lag_index):
-        self.controller_implementation.set_point(required_input[i_current - 1])
-        control_param, detailed_control_param = self.controller_implementation(current_input[lag_index - 1], power=self.settings['error_pow'])
+                           lag_index,
+                           mode,
+                           ):
+        order = 10
+        freq = 30
+        if mode == 'low' or mode == 'lp':
+            controller = self.controller_implementation_lp
+        elif mode == 'high' or mode == 'hp':
+            controller = self.controller_implementation_hp
+        else:
+            raise NotImplementedError('controller filter mode is either low/lp or high/hp')
+        
+        controller.set_point(required_input[i_current - 1])        
+        control_param, detailed_control_param = controller(current_input[lag_index - 1],
+                                                            power=self.settings['error_pow'],
+                                                            rampups=[control_param['P_steps'],
+                                                                    control_param['I_steps'],
+                                                                    control_param['D_steps'],
+                                                                    control_param['D2_steps'],
+                                                                    ]
+                                                            )
         return (control_param, detailed_control_param)
+    
+    
+    def filter(self, data, mode=None, order=10, freq=30):
+        # if mode == 'low' or mode == 'lp':
+        #     b, a = sig.butter(order, freq, btype='lowpass', analog=False, fs=(1/self.settings['dt']))
+        # elif mode == 'high' or mode == 'hp':
+        #     b, a = sig.butter(order, freq, btype='highpass', analog=False, fs=(1/self.settings['dt']))
+        # try:
+        #     data = sig.filtfilt(b, a, data)
+        # except:
+        #     data = sig.lfilter(b, a, data)
+        
+        data_fft = scipy.fft.fft(data, n=len(data))
+        freq = scipy.fft.fftfreq(len(data_fft), d=self.settings['dt'])
+        
+        data_lp = data_fft.copy()
+        data_hp = data_fft.copy()
+        
+        
+        data_lp[np.abs(freq) > freq] = 0
+        data_hp[np.abs(freq) <= freq] = 0
+        
+        data_lp = scipy.fft.ifft(data_lp, n=data_fft.shape[0])
+        data_hp = scipy.fft.ifft(data_hp, n=data_fft.shape[0])
+        
+        return data_lp.real, data_hp.real
 
     def __exit__(self, *args):
         self.log.close()

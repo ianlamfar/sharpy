@@ -197,11 +197,11 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
 
     settings = dict()
     settings['NonLinearDynamicPrescribedStep'] = {'print_info': 'on',
-                                                  'max_iterations': 950,  # default 950
+                                                  'max_iterations': 200,  # default 950
                                                   'delta_curved': 1e-1,  # default 1e-6
                                                   'min_delta': 1e-3,  # default 1e-8
                                                   'newmark_damp': 5e-3,  # default 5e-4
-                                                  'relaxation_factor': 0.3, # default 0.3
+                                                  'relaxation_factor': 0, # default 0.3
                                                   'gravity_on': gravity_on,
                                                   'gravity': 9.81,
                                                   'num_steps': n_tsteps,
