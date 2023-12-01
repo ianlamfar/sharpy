@@ -75,12 +75,8 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_default['order'] = 2
     settings_description['order'] = 'finite difference order for derivative'
     
-
-    # settings_types['input_type'] = 'str'
-    # settings_default['input_type'] = 'lift'
-    # settings_description['input_type'] = (
-    #     'Quantity used to define the' +
-    #     ' reference state. Supported: `pitch`')
+    settings_types['cutoff_freq'] = 'float'
+    settings_default['cutoff_freq'] = 30
 
     settings_types['dt'] = 'float'
     settings_default['dt'] = None
@@ -524,7 +520,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         return (control_param, detailed_control_param)
     
     
-    def filter(self, data, mode=None, order=10, freq=10):
+    def filter(self, data, mode=None, order=10):
         # if mode == 'low' or mode == 'lp':
         #     b, a = sig.butter(order, freq, btype='lowpass', analog=False, fs=(1/self.settings['dt']))
         # elif mode == 'high' or mode == 'hp':
@@ -535,14 +531,14 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         #     data = sig.lfilter(b, a, data)
         
         data_fft = scipy.fft.fft(data, n=len(data))
-        freq = scipy.fft.fftfreq(data_fft.shape[0], d=self.settings['dt'])
+        fft_freq = scipy.fft.fftfreq(data_fft.shape[0], d=self.settings['dt'])
         
         data_lp = data_fft.copy()
         data_hp = data_fft.copy()
         
         
-        data_lp[np.abs(freq) > freq] = 0
-        data_hp[np.abs(freq) <= freq] = 0
+        data_lp[np.abs(fft_freq) > self.settings['cutoff_freq']] = 0
+        data_hp[np.abs(fft_freq) <= self.settings['cutoff_freq']] = 0
         
         data_lp = scipy.fft.ifft(data_lp, n=data_fft.shape[0])
         data_hp = scipy.fft.ifft(data_hp, n=data_fft.shape[0])
