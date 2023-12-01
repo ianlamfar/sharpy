@@ -520,7 +520,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         return (control_param, detailed_control_param)
     
     
-    def filter(self, data, mode=None, order=10):
+    def filter(self, data, mode=None, order=10, freq=30):
         # if mode == 'low' or mode == 'lp':
         #     b, a = sig.butter(order, freq, btype='lowpass', analog=False, fs=(1/self.settings['dt']))
         # elif mode == 'high' or mode == 'hp':
