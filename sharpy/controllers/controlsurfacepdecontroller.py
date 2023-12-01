@@ -524,7 +524,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         return (control_param, detailed_control_param)
     
     
-    def filter(self, data, mode=None, order=10, freq=30):
+    def filter(self, data, mode=None, order=10, freq=10):
         # if mode == 'low' or mode == 'lp':
         #     b, a = sig.butter(order, freq, btype='lowpass', analog=False, fs=(1/self.settings['dt']))
         # elif mode == 'high' or mode == 'hp':
@@ -535,7 +535,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         #     data = sig.lfilter(b, a, data)
         
         data_fft = scipy.fft.fft(data, n=len(data))
-        freq = scipy.fft.fftfreq(len(data_fft), d=self.settings['dt'])
+        freq = scipy.fft.fftfreq(data_fft.shape[0], d=self.settings['dt'])
         
         data_lp = data_fft.copy()
         data_hp = data_fft.copy()
