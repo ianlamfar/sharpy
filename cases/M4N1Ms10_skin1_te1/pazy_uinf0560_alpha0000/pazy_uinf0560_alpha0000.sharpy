@@ -1,10 +1,10 @@
 [SHARPy]
 flow = BeamLoader, AerogridLoader, StaticCoupled, AerogridPlot, BeamPlot, WriteVariablesTime, Modal, LinearAssembler, AsymptoticStability, SaveParametricCase
 case = pazy_uinf0560_alpha0000
-route = /home/ianlamfar/sharpy_control/cases//M4N1Ms10_skin1_te1//pazy_uinf0560_alpha0000
+route = /home/ansley/sharpy_control/cases//M4N1Ms10_skin1_te1//pazy_uinf0560_alpha0000
 write_screen = on
 write_log = on
-log_folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/pazy_uinf0560_alpha0000/
+log_folder = /home/ansley/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/pazy_uinf0560_alpha0000/
 log_file = pazy_uinf0560_alpha0000.log
 [BeamLoader]
 unsteady = off
@@ -67,7 +67,7 @@ include_rbm = off
 include_applied_forces = on
 minus_m_star = 0
 [AeroForcesCalculator]
-folder = /home/ianlamfar/sharpy_control//output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1//forces
+folder = /home/ansley/sharpy_control//output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1//forces
 write_text_file = on
 text_file_name = pazy_uinf0560_alpha0000_aeroforces.csv
 screen_output = on
@@ -181,16 +181,16 @@ u_inf = 56.0
 u_inf_direction = 1.0, 0.0, 0.0
 [[postprocessors_settings]]
 [[[BeamLoads]]]
-folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/
+folder = /home/ansley/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/
 csv_output = off
 [[[BeamPlot]]]
-folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/
+folder = /home/ansley/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/
 include_rbm = on
 include_applied_forces = on
 [[[StallCheck]]]
 [[[AerogridPlot]]]
 u_inf = 56.0
-folder = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/
+folder = /home/ansley/sharpy_control/output/pazy/output/pazy_M4N1Ms10_alpha0000_skin1_te1/
 include_rbm = on
 include_applied_forces = on
 minus_m_star = 0

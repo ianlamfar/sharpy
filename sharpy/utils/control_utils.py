@@ -222,7 +222,7 @@ class PDE(object):
 
         self._derivator_1 = n_order_fd_1
         self._derivator_2 = n_order_fd_2
-        self._derivative_limits = np.array([-1, 1])*10000
+        self._derivative_limits = np.array([-1, 1])*10
 
         self._n_calls = 0
 

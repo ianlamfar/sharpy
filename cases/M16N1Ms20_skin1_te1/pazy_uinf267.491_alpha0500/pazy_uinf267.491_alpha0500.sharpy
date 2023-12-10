@@ -1,7 +1,7 @@
 [SHARPy]
 flow = BeamLoader, AerogridLoader, DynamicCoupled, SaveParametricCase
 case = pazy_uinf267.491_alpha0500
-route = /home/ianlamfar/sharpy_control/cases//M16N1Ms20_skin1_te1//pazy_uinf267.491_alpha0500
+route = /home/ansley/sharpy_control/cases//M16N1Ms20_skin1_te1//pazy_uinf267.491_alpha0500
 write_screen = on
 write_log = on
 log_folder = output/pazy_M16N1Ms20_alpha0500_skin1_te1/pazy_uinf267.491_alpha0500/

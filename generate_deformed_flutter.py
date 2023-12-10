@@ -321,24 +321,24 @@ if __name__== '__main__':
     for i, u_inf in enumerate(u_inf_vec):
         print('RUNNING SHARPY %f %f\n' % (alpha, u_inf))
         case_name = 'pazy_uinf{:04g}_alpha{:04g}'.format(u_inf*10, alpha*100)
-        try:
-            generate_pazy(u_inf, case_name,
-                          output_folder='/output/pazy/output/pazy_M{:g}N{:g}Ms{:g}_alpha{:04g}_skin{:g}_te{:g}/'.format(
-                              M, N, Ms, alpha*100, skin_on, trailing_edge_weight),
-                          cases_subfolder='/M{:g}N{:g}Ms{:g}_skin{:g}_te{:g}/'.format(
-                              M, N, Ms, skin_on, trailing_edge_weight),
-                          M=M, N=N, Ms=Ms, alpha=alpha,
-                          gravity_on=gravity_on,
-                          skin_on=skin_on,
-                          trailing_edge_weight=trailing_edge_weight)
-            now = datetime.now()
-            dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-            with open('./output/pazy/{:s}.txt'.format(batch_log), 'a') as f:
-                f.write('%s Ran case %i :::: u_inf = %f\n\n' % (dt_string, i, u_inf))
-        except:
-            now = datetime.now()
-            dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
-            with open('./output/pazy/{:s}.txt'.format(batch_log), 'a') as f:
-                f.write('%s ERROR RUNNING case %f\n\n' % (dt_string, u_inf))
+        # try:
+        generate_pazy(u_inf, case_name,
+                        output_folder='/output/pazy/output/pazy_M{:g}N{:g}Ms{:g}_alpha{:04g}_skin{:g}_te{:g}/'.format(
+                            M, N, Ms, alpha*100, skin_on, trailing_edge_weight),
+                        cases_subfolder='/M{:g}N{:g}Ms{:g}_skin{:g}_te{:g}/'.format(
+                            M, N, Ms, skin_on, trailing_edge_weight),
+                        M=M, N=N, Ms=Ms, alpha=alpha,
+                        gravity_on=gravity_on,
+                        skin_on=skin_on,
+                        trailing_edge_weight=trailing_edge_weight)
+        now = datetime.now()
+        dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        with open('./output/pazy/{:s}.txt'.format(batch_log), 'a') as f:
+            f.write('%s Ran case %i :::: u_inf = %f\n\n' % (dt_string, i, u_inf))
+        # except:
+        #     now = datetime.now()
+        #     dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+        #     with open('./output/pazy/{:s}.txt'.format(batch_log), 'a') as f:
+        #         f.write('%s ERROR RUNNING case %f\n\n' % (dt_string, u_inf))
 
 

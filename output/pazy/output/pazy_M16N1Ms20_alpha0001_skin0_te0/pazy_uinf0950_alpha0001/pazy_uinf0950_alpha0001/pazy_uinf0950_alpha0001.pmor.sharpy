@@ -2,4 +2,4 @@
 u_inf = 95.0
 [sim_info]
 case = pazy_uinf0950_alpha0001
-path_to_data = /home/ianlamfar/sharpy_control/output/pazy/output/pazy_M16N1Ms20_alpha0001_skin0_te0/pazy_uinf0950_alpha0001/pazy_uinf0950_alpha0001
+path_to_data = /home/ansley/sharpy_control/output/pazy/output/pazy_M16N1Ms20_alpha0001_skin0_te0/pazy_uinf0950_alpha0001/pazy_uinf0950_alpha0001

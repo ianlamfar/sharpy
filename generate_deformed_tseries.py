@@ -53,8 +53,8 @@ def generate_pazy_tseries(u_inf, case_name, output_folder='/output/', cases_subf
     # print(M, N, M_star_fact, pazy.structure.n_elem)
 
     u_inf_direction = np.array([1., 0., 0.])
-    dt = pazy.aero.main_chord / M / u_inf
-    n_tsteps = int(end_time // dt)
+    dt = kwargs.get('dt', (pazy.aero.main_chord / M / u_inf))
+    n_tsteps = int(end_time / dt)
 
     pazy.config['SHARPy'] = {
         'flow':

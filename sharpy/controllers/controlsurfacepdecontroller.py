@@ -26,38 +26,29 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_types['time_history_input_file'] = 'str'
     settings_default['time_history_input_file'] = None
     settings_description['time_history_input_file'] = 'Route and file name of the time history of desired state'
-
-    settings_types['LP'] = 'float'
-    settings_default['LP'] = 0.0
-    settings_description['LP'] = 'Proportional gain of the controller'
-
-    settings_types['LI'] = 'float'
-    settings_default['LI'] = 0.0
-    settings_description['LI'] = 'Integral gain of the controller'
-
-    settings_types['LD'] = 'float'
-    settings_default['LD'] = 0.0
-    settings_description['LD'] = 'First differential gain of the controller'
     
-    settings_types['LD2'] = 'float'
-    settings_default['LD2'] = 0.0
-    settings_description['LD2'] = 'Second differential gain of the controller'
+    settings_types['Kpos'] = 'float'
+    settings_default['Kpos'] = 0
 
-    settings_types['HP'] = 'float'
-    settings_default['HP'] = 0.0
-    settings_description['HP'] = 'Proportional gain of the controller'
+    ############ CONTROLLER CONSTANTS ############
 
-    settings_types['HI'] = 'float'
-    settings_default['HI'] = 0.0
-    settings_description['HI'] = 'Integral gain of the controller'
+    settings_types['P'] = 'list(float)'
+    settings_default['P'] = [0, 0]
+    settings_description['P'] = 'Proportional gain of the controller'
 
-    settings_types['HD'] = 'float'
-    settings_default['HD'] = 0.0
-    settings_description['HD'] = 'First differential gain of the controller'
+    settings_types['I'] = 'list(float)'
+    settings_default['I'] = [0, 0]
+    settings_description['I'] = 'Integral gain of the controller'
+
+    settings_types['D'] = 'list(float)'
+    settings_default['D'] = [0, 0]
+    settings_description['D'] = 'First differential gain of the controller'
     
-    settings_types['HD2'] = 'float'
-    settings_default['HD2'] = 0.0
-    settings_description['HD2'] = 'Second differential gain of the controller'
+    settings_types['D2'] = 'list(float)'
+    settings_default['D2'] = [0, 0]
+    settings_description['D2'] = 'Second differential gain of the controller'
+
+    ############ CONTROLLER CONSTANTS ############
     
     settings_types['P_rampup_steps'] = 'int'
     settings_default['P_rampup_steps'] = 1
@@ -75,8 +66,20 @@ class ControlSurfacePdeController(controller_interface.BaseController):
     settings_default['order'] = 2
     settings_description['order'] = 'finite difference order for derivative'
     
-    settings_types['cutoff_freq'] = 'float'
-    settings_default['cutoff_freq'] = 30
+    settings_types['cutoff_freq0'] = 'list(float)'
+    settings_default['cutoff_freq0'] = [0, 5]
+    
+    settings_types['cutoff_freq1'] = 'list(float)'
+    settings_default['cutoff_freq1'] = [32, 40]
+    
+    settings_types['smoothing'] = 'bool'
+    settings_default['smoothing'] = True
+    
+    settings_types['kernel_size'] = 'int'
+    settings_default['kernel_size'] = 3
+    
+    settings_types['kernel_mode'] = 'str'
+    settings_default['kernel_mode'] = 'gaussian'
 
     settings_types['dt'] = 'float'
     settings_default['dt'] = None
@@ -147,8 +150,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         # state_input_history[i] == input_time_history_file[i] + error[i]
         self.p_error_history = list()
         self.i_error_history = list()
-        # self.d_error_history = list()
-        self.real_state_input_history = list()
+        self.d_error_history = list()
         self.control_history = list()
 
         self.controller_implementation = None
@@ -165,31 +167,48 @@ class ControlSurfacePdeController(controller_interface.BaseController):
 
         self.settings = self.in_dict
         self.controller_id = controller_id
-
-        # validate that the input_type is in the supported ones
-        # valid = False
-        # for t in self.supported_input_types:
-        #     if t in self.settings['input_type']:
-        #         valid = True
-        #         break
-        # if not valid:
-        #     cout.cout_wrap('The input_type {} is not supported by {}'.format(
-        #         self.settings['input_type'], self.controller_id), 3)
-        #     cout.cout_wrap('The supported ones are:', 3)
-        #     for i in self.supported_input_types:
-        #         cout.cout_wrap('    {}'.format(i), 3)
-        #     raise NotImplementedError()
+        
+        self.lp_active = (self.settings['P'][0]!=0 or self.settings['I'][0]!=0 or self.settings['D'][0]!=0 or self.settings['D2'][0]!=0)
+        self.hp_active = (self.settings['P'][1]!=0 or self.settings['I'][1]!=0 or self.settings['D'][1]!=0 or self.settings['D2'][1]!=0)
+        self.t_active = (self.settings['P'][2]!=0 or self.settings['I'][2]!=0 or self.settings['D'][2]!=0 or self.settings['D2'][2]!=0)
+        self.td_active = (self.settings['P'][3]!=0 or self.settings['I'][3]!=0 or self.settings['D'][3]!=0 or self.settings['D2'][3]!=0)
+        self.tdd_active = (self.settings['P'][4]!=0 or self.settings['I'][4]!=0 or self.settings['D'][4]!=0 or self.settings['D2'][4]!=0)
 
         if self.settings['write_controller_log']:
-            self.log_lp = open(self.settings['controller_log_route'] + self.controller_id + '_lp_log.csv', 'w+')
-            self.log_lp.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
+            self.log_tipr = open(self.settings['controller_log_route'] + self.controller_id + '_tip_r_log.csv', 'w+')
+            self.log_tipr.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
                            format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'D2control', 'noise', 'capping', 'raw', 'control'))
-            self.log_lp.flush()
+            self.log_tipr.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(0,0,0,0,0,0,0,0,0,0,0,0))
+            self.log_tipr.flush()
             
-            self.log_hp = open(self.settings['controller_log_route'] + self.controller_id + '_hp_log.csv', 'w+')
-            self.log_hp.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
+            self.log_tipz = open(self.settings['controller_log_route'] + self.controller_id + '_tip_z_log.csv', 'w+')
+            self.log_tipz.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
                            format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'D2control', 'noise', 'capping', 'raw', 'control'))
-            self.log_hp.flush()
+            self.log_tipz.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(0,0,0,0,0,0,0,0,0,0,0,0))
+            self.log_tipz.flush()
+            
+            self.log_t = open(self.settings['controller_log_route'] + self.controller_id + '_t_log.csv', 'w+')
+            self.log_t.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
+                           format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'D2control', 'noise', 'capping', 'raw', 'control'))
+            self.log_t.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(0,0,0,0,0,0,0,0,0,0,0,0))
+            self.log_t.flush()
+            
+            self.log_td = open(self.settings['controller_log_route'] + self.controller_id + '_td_log.csv', 'w+')
+            self.log_td.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
+                           format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'D2control', 'noise', 'capping', 'raw', 'control'))
+            self.log_td.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(0,0,0,0,0,0,0,0,0,0,0,0))
+            self.log_td.flush()
+            
+            self.log_tdd = open(self.settings['controller_log_route'] + self.controller_id + '_tdd_log.csv', 'w+')
+            self.log_tdd.write(('#' + 1 * '{:>2},' + 10 * '{:>12},' + '{:>12}\n').
+                           format('tstep', 'time', 'Ref. state', 'state', 'Pcontrol', 'Icontrol', 'Dcontrol', 'D2control', 'noise', 'capping', 'raw', 'control'))
+            self.log_tdd.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(0,0,0,0,0,0,0,0,0,0,0,0))
+            self.log_tdd.flush()
 
         # save input time history
         try:
@@ -199,21 +218,70 @@ class ControlSurfacePdeController(controller_interface.BaseController):
             raise OSError('File {} not found in Controller'.format(self.settings['time_history_input_file']))
 
         # Init PID controller
-        self.controller_implementation_lp = control_utils.PDE(self.settings['LP'],
-                                                           self.settings['LI'],
-                                                           self.settings['LD'],
-                                                           self.settings['LD2'],
+        self.controller_implementation_tip_theta = control_utils.PDE(self.settings['P'][0],
+                                                           self.settings['I'][0],
+                                                           0,
+                                                           0,
                                                            self.settings['dt'],
                                                            self.settings['order'],
                                                            )
+        self.tip_theta_input_history = list()
         
-        self.controller_implementation_hp = control_utils.PDE(self.settings['HP'],
-                                                           self.settings['HI'],
-                                                           self.settings['HD'],
-                                                           self.settings['HD2'],
+        self.controller_implementation_tip_theta_dot = control_utils.PDE(self.settings['D'][0],
+                                                           0,
+                                                           0,
+                                                           0,
                                                            self.settings['dt'],
                                                            self.settings['order'],
                                                            )
+        self.tip_theta_dot_input_history = list()
+        
+        self.controller_implementation_tip_theta_ddot = control_utils.PDE(self.settings['D2'][0],
+                                                           0,
+                                                           0,
+                                                           0,
+                                                           self.settings['dt'],
+                                                           self.settings['order'],
+                                                           )
+        self.tip_theta_ddot_input_history = list()
+        
+        self.controller_implementation_tip_pos = control_utils.PDE(self.settings['P'][1],
+                                                           self.settings['I'][1],
+                                                           self.settings['D'][1],
+                                                           self.settings['D2'][1],
+                                                           self.settings['dt'],
+                                                           self.settings['order'],
+                                                           )
+        self.tip_pos_input_history = list()
+        # self.tip_theta_pos_input_history = list()
+        # self.tip_theta_ddot_input_history = list()
+        
+        self.controller_implementation_theta = control_utils.PDE(self.settings['P'][2],
+                                                           self.settings['I'][2],
+                                                           self.settings['D'][2],
+                                                           self.settings['D2'][2],
+                                                           self.settings['dt'],
+                                                           self.settings['order'],
+                                                           )
+        self.theta_input_history = list()
+        
+        self.controller_implementation_theta_dot = control_utils.PDE(self.settings['P'][3],
+                                                           self.settings['I'][3],
+                                                           self.settings['D'][3],
+                                                           self.settings['D2'][3],
+                                                           self.settings['dt'],
+                                                           self.settings['order'],
+                                                           )
+        self.theta_dot_input_history = list()
+        
+        self.controller_implementation_theta_ddot = control_utils.PDE(self.settings['P'][4],
+                                                           self.settings['I'][4],
+                                                           self.settings['D'][4],
+                                                           self.settings['D2'][4],
+                                                           self.settings['dt'],
+                                                           self.settings['order'],
+                                                           )
+        self.theta_ddot_input_history = list()
 
         # check that controlled_surfaces_coeff has the correct number of parameters
         # if len() == 1 and == 1.0, then expand to number of surfaces.
@@ -254,81 +322,119 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         """
         self.data = data
         # get current state input
-        self.real_state_input_history.append(self.extract_time_history(controlled_state))
-        # print(self.real_state_input_history)
+        self.tip_theta_input_history.append(self.extract_time_history(controlled_state, mode='tip_theta'))
+        self.tip_theta_dot_input_history.append(self.extract_time_history(controlled_state, mode='tip_theta_dot'))
+        self.tip_theta_ddot_input_history.append(self.extract_time_history(controlled_state, mode='tip_theta_ddot'))
+        self.tip_pos_input_history.append(self.extract_time_history(controlled_state, mode='tip_pos'))
+        self.theta_input_history.append(self.extract_time_history(controlled_state, mode='theta'))
+        self.theta_dot_input_history.append(self.extract_time_history(controlled_state, mode='theta_dot'))
+        self.theta_ddot_input_history.append(self.extract_time_history(controlled_state, mode='theta_ddot'))
 
         # apply lag to state, DO NOT ALTER "data" or "controlled_state" as it contains other info of current timestep
         lag = self.settings['controller_lag']
-        lag_index = len(self.real_state_input_history)
+        lag_index = len(self.theta_input_history)
         if lag > 1:  # 0=default, 1=effectively default (previous timestep)
-            lag_index = max(0, len(self.real_state_input_history) - lag) + 1
+            lag_index = max(0, len(self.theta_input_history) - lag) + 1
 
-        i_current = len(self.real_state_input_history)
-        # print(len(self.real_state_input_history), np.degrees(self.real_state_input_history[lag_index - 1]), i_current, lag_index)
+        i_current = len(self.theta_input_history)
         # apply it where needed.
         
-        lp_input, hp_input = self.filter(self.real_state_input_history)
-
-        # lp_input = self.real_state_input_history - hp_input
-        
-        
-        # # hp_input = self.filter(self.real_state_input_history, 'hp')
-        # # lp_input = self.real_state_input_history - hp_input
-        
-        control_command_lp, detail_lp = self.controller_wrapper(
+        control_command_tipr, detail_tipr = self.controller_wrapper(
             required_input=self.prescribed_input_time_history,
-            current_input=lp_input,
-            control_param={'P': self.settings['LP'],
-                           'I': self.settings['LI'],
-                           'D': self.settings['LD'],
-                           'D2': self.settings['LD2'],
-                           'P_steps': self.settings['P_rampup_steps'],
+            current_input=self.tip_theta_input_history,
+            control_param={'P_steps': self.settings['P_rampup_steps'],
                            'I_steps': self.settings['I_rampup_steps'],
                            'D_steps': self.settings['D_rampup_steps'],
                            'D2_steps': self.settings['D2_rampup_steps'],
                            },
             i_current=i_current,
             lag_index=lag_index,
-            mode='low',
+            mode='tip_theta',
             )
         
-        control_command_hp, detail_hp = self.controller_wrapper(
+        _control_command_tiprd, _detail_tiprd = self.controller_wrapper(
+            required_input=self.prescribed_input_time_history,
+            current_input=self.tip_theta_dot_input_history,
+            control_param={'P_steps': self.settings['D_rampup_steps'],
+                           'I_steps': self.settings['D_rampup_steps'],
+                           'D_steps': self.settings['D_rampup_steps'],
+                           'D2_steps': self.settings['D_rampup_steps'],
+                           },
+            i_current=i_current,
+            lag_index=lag_index,
+            mode='tip_theta_dot',
+            )
+        
+        _control_command_tiprdd, _detail_tiprdd = self.controller_wrapper(
+            required_input=self.prescribed_input_time_history,
+            current_input=self.tip_theta_dot_input_history,
+            control_param={'P_steps': self.settings['D2_rampup_steps'],
+                           'I_steps': self.settings['D2_rampup_steps'],
+                           'D_steps': self.settings['D2_rampup_steps'],
+                           'D2_steps': self.settings['D2_rampup_steps'],
+                           },
+            i_current=i_current,
+            lag_index=lag_index,
+            mode='tip_theta_ddot',
+            )
+        
+        control_command_tipr += _control_command_tiprd + _control_command_tiprdd
+        detail_tipr[-2:] = [_detail_tiprd[0], _detail_tiprdd[0]]
+        
+        control_command_tipz, detail_tipz = self.controller_wrapper(
             required_input=np.zeros_like(self.prescribed_input_time_history),
-            current_input=hp_input,
-            control_param={'P': self.settings['HP'],
-                           'I': self.settings['HI'],
-                           'D': self.settings['HD'],
-                           'D2': self.settings['HD2'],
-                           'P_steps': self.settings['P_rampup_steps'],
+            current_input=self.tip_pos_input_history,
+            control_param={'P_steps': self.settings['P_rampup_steps'],
                            'I_steps': self.settings['I_rampup_steps'],
                            'D_steps': self.settings['D_rampup_steps'],
                            'D2_steps': self.settings['D2_rampup_steps'],
                            },
             i_current=i_current,
             lag_index=lag_index,
-            mode='high',
+            mode='tip_pos',
             )
         
-        # print(control_command, detail)
-
-        # save raw command before applying noise and cap
-        # abs_err = abs(self.prescribed_input_time_history[-1] - self.real_state_input_history[-1])
-        # if abs_err > 0:
-        #     hp_weight = abs(hp_input[-1]) / abs_err
-        #     lp_weight = 1 - hp_weight
-        # else:
-        #     hp_weight = 0.5
-        #     lp_weight = 0.5
+        control_command_t, detail_t = self.controller_wrapper(
+            required_input=np.zeros_like(self.prescribed_input_time_history),
+            current_input=self.theta_input_history,
+            control_param={'P_steps': self.settings['P_rampup_steps'],
+                           'I_steps': self.settings['I_rampup_steps'],
+                           'D_steps': self.settings['D_rampup_steps'],
+                           'D2_steps': self.settings['D2_rampup_steps'],
+                           },
+            i_current=i_current,
+            lag_index=lag_index,
+            mode='theta',
+            )
         
-        hp_weight = 1
-        lp_weight = 1
+        control_command_td, detail_td = self.controller_wrapper(
+            required_input=np.zeros_like(self.prescribed_input_time_history),
+            current_input=self.theta_dot_input_history,
+            control_param={'P_steps': self.settings['P_rampup_steps'],
+                           'I_steps': self.settings['I_rampup_steps'],
+                           'D_steps': self.settings['D_rampup_steps'],
+                           'D2_steps': self.settings['D2_rampup_steps'],
+                           },
+            i_current=i_current,
+            lag_index=lag_index,
+            mode='theta_dot',
+            )
         
-        control_command_hp *= hp_weight
-        control_command_lp *= lp_weight
-        detail_hp *= hp_weight
-        detail_lp *= lp_weight
-        
-        control_command = control_command_lp + control_command_hp
+        control_command_tdd, detail_tdd = self.controller_wrapper(
+            required_input=np.zeros_like(self.prescribed_input_time_history),
+            current_input=self.theta_ddot_input_history,
+            control_param={'P_steps': self.settings['P_rampup_steps'],
+                           'I_steps': self.settings['I_rampup_steps'],
+                           'D_steps': self.settings['D_rampup_steps'],
+                           'D2_steps': self.settings['D2_rampup_steps'],
+                           },
+            i_current=i_current,
+            lag_index=lag_index,
+            mode='theta_ddot',
+            )
+               
+        control_command = control_command_tipr + control_command_tipz +\
+            control_command_t + control_command_td + control_command_tdd
         raw_command = control_command
 
         # adding white noise
@@ -358,56 +464,117 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         controlled_state['aero'].control_surface_deflection = (
             np.array(self.settings['controlled_surfaces_coeff']) * control_command)
 
-        self.log_lp.write(('{:>6d},' + 10 * '{:>12.6f},' + '{:>12.6f}\n').
+        self.log_tipr.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
                        format(i_current,
                               i_current * self.settings['dt'],
                               self.prescribed_input_time_history[i_current - 1],
-                              lp_input[i_current - 1],
-                              detail_lp[0],
-                              detail_lp[1],
-                              detail_lp[2],
-                              detail_lp[3],
+                              self.tip_theta_input_history[i_current - 1],
+                              detail_tipr[0],
+                              detail_tipr[1],
+                              detail_tipr[2],
+                              detail_tipr[3],
                               noise,
                               cap,
                               raw_command,
-                              control_command_lp))
-        self.log_lp.flush()
+                              control_command_tipr))
+        self.log_tipr.flush()
         
-        self.log_hp.write(('{:>6d},' + 10 * '{:>12.6f},' + '{:>12.6f}\n').
+        self.log_tipz.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
                        format(i_current,
                               i_current * self.settings['dt'],
                               np.zeros_like(self.prescribed_input_time_history[i_current - 1]),
-                              hp_input[i_current - 1],
-                              detail_hp[0],
-                              detail_hp[1],
-                              detail_hp[2],
-                              detail_hp[3],
+                              self.tip_pos_input_history[i_current - 1],
+                              detail_tipz[0],
+                              detail_tipz[1],
+                              detail_tipz[2],
+                              detail_tipz[3],
                               noise,
                               cap,
                               raw_command,
-                              control_command_hp))
-        self.log_hp.flush()
+                              control_command_tipz))
+        self.log_tipz.flush()
+        
+        self.log_t.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(i_current,
+                              i_current * self.settings['dt'],
+                              np.zeros_like(self.prescribed_input_time_history[i_current - 1]),
+                              self.theta_input_history[i_current - 1],
+                              detail_t[0],
+                              detail_t[1],
+                              detail_t[2],
+                              detail_t[3],
+                              noise,
+                              cap,
+                              raw_command,
+                              control_command_t))
+        self.log_t.flush()
+        
+        self.log_td.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(i_current,
+                              i_current * self.settings['dt'],
+                              np.zeros_like(self.prescribed_input_time_history[i_current - 1]),
+                              self.theta_dot_input_history[i_current - 1],
+                              detail_td[0],
+                              detail_td[1],
+                              detail_td[2],
+                              detail_td[3],
+                              noise,
+                              cap,
+                              raw_command,
+                              control_command_td))
+        self.log_td.flush()
+        
+        self.log_tdd.write(('{:>6d},' + 10 * '{:>12.6e},' + '{:>12.6e}\n').
+                       format(i_current,
+                              i_current * self.settings['dt'],
+                              np.zeros_like(self.prescribed_input_time_history[i_current - 1]),
+                              self.theta_ddot_input_history[i_current - 1],
+                              detail_tdd[0],
+                              detail_tdd[1],
+                              detail_tdd[2],
+                              detail_tdd[3],
+                              noise,
+                              cap,
+                              raw_command,
+                              control_command_tdd))
+        self.log_tdd.flush()
         
         
         
-        error_hp = -hp_input[i_current - 1]
-        error_lp = self.prescribed_input_time_history[i_current - 1] - lp_input[i_current - 1]
+        error_tipr = -self.tip_theta_input_history[i_current - 1]
+        error_tipz = self.prescribed_input_time_history[i_current - 1] - self.tip_pos_input_history[i_current - 1]
+        error_t = -self.theta_input_history[i_current - 1]
+        error_td = -self.theta_dot_input_history[i_current - 1]
+        error_tdd = -self.theta_ddot_input_history[i_current - 1]
         
-        # error = self.prescribed_input_time_history[i_current - 1] - self.real_state_input_history[i_current - 1]
-        error = error_hp + error_lp
+        
+        error_tipr *= self.lp_active
+        error_tipz *= self.hp_active
+        error_t *= self.t_active
+        error_td *= self.td_active
+        error_tdd *= self.tdd_active
+        
+        error = error_tipr + error_tipz + error_t
         
         raw = np.degrees(raw_command)
         # control = np.degrees(detail)
-        control_lp = np.degrees(detail_lp)
-        control_hp = np.degrees(detail_hp)
+        control_tipr = np.degrees(detail_tipr)
+        control_tipz = np.degrees(detail_tipz)
+        control_t = np.degrees(detail_t)
+        control_td = np.degrees(detail_td)
+        control_tdd = np.degrees(detail_tdd)
         cap_control = np.degrees(control_command)
+        
         print(f'PDEControl -- error: {error:+.4e}, raw: {raw:+.4f}, capped: {cap_control:+.4f}')
-        print(f'LP -- error: {error_lp:+.4e}, [{control_lp[0]:+.4f}P|{control_lp[1]:+.4f}I|{control_lp[2]:+.4f}D|{control_lp[3]:+.4f}D2]')
-        print(f'HP -- error: {error_hp:+.4e}, [{control_hp[0]:+.4f}P|{control_hp[1]:+.4f}I|{control_hp[2]:+.4f}D|{control_hp[3]:+.4f}D2]')
-        # print(controlled_state['structural'].psi[-1, -1, 1], controlled_state['aero'].control_surface_deflection)
+        if self.lp_active: print(f'θt -- error: {error_tipr:+.4e}, [{control_tipr[0]:+.4f}P|{control_tipr[1]:+.4f}I|{control_tipr[2]:+.4f}D|{control_tipr[3]:+.4f}D2]')
+        if self.hp_active: print(f'zt -- error: {error_tipz:+.4e}, [{control_tipz[0]:+.4f}P|{control_tipz[1]:+.4f}I|{control_tipz[2]:+.4f}D|{control_tipz[3]:+.4f}D2]')
+        if self.t_active: print(f'∫θ -- error: {error_t:+.4e}, [{control_t[0]:+.4f}P|{control_t[1]:+.4f}I|{control_td[0]:+.4f}D|{control_tdd[0]:+.4f}D²|{control_tdd[2]:+.4f}D³|{control_tdd[3]:+.4f}D⁴]')
+        # if self.td_active: print(f'T1 -- error: {error_td:+.4e}, [{control_td[0]:+.4f}P|{control_td[1]:+.4f}I|{control_td[2]:+.4f}D|{control_td[3]:+.4f}D2]')
+        # if self.tdd_active: print(f'T2 -- error: {error_tdd:+.4e}, [{control_tdd[0]:+.4f}P|{control_tdd[1]:+.4f}I|{control_tdd[2]:+.4f}D|{control_tdd[3]:+.4f}D2]')
+        
         return controlled_state
 
-    def extract_time_history(self, controlled_state):
+    def extract_time_history(self, controlled_state, mode):
         output: float = 0.0
         aero_tstep = controlled_state['aero']
         struct_tstep = controlled_state['structural']
@@ -433,9 +600,12 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         # get rotation matrix
         cga = algebra.quat2rotation(struct_tstep.quat)
         
-        header += ", y/s, cl"
-        numb_col += 2
-        lift_distribution = np.concatenate((lift_distribution, np.zeros((N_nodes, 2))), axis=1)
+        header += ", y/s, cl, zdot, zddot"
+        numb_col += 4
+        lift_distribution = np.concatenate((lift_distribution, np.zeros((N_nodes, 4))), axis=1)
+        
+        N_elems = self.data.structure.num_elem
+        theta_distribution = np.zeros((N_elems, 3))
 
         total_area = 0
         for inode in range(N_nodes):
@@ -477,19 +647,62 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                 # Check if shared nodes from different surfaces exist (e.g. two wings joining at symmetry plane)
                 # Leads to error since panel area just donates for half the panel size while lift forces is summed up
                 lift_distribution[inode, 5] /= len(self.data.aero.struct2aero_mapping[inode])
-        
-        
-        lift = np.sum(lift_distribution[:, 3])  # total lift force
+                
+                lift_distribution[inode, 6] = struct_tstep.pos_dot[inode, 2]  # zdot
+                lift_distribution[inode, 7] = struct_tstep.pos_ddot[inode, 2]  # zddot
+                
+        for ielem in range(N_elems):
+            theta_distribution[ielem, 0] = struct_tstep.psi[ielem, -1, 1]
+            theta_distribution[ielem, 1] = struct_tstep.psi_dot[ielem, -1, 1]
+            theta_distribution[ielem, 2] = struct_tstep.psi_ddot[ielem, -1, 1]
+                
+        # lift = np.sum(lift_distribution[:, 3])  # total lift force
         # u = np.linalg.norm(urel)
         # if u > 0.0:
         #     output = lift / (0.5 * self.settings['rho'] * (u**2) * total_area)
         # else: output = 0.0
         
-        output = np.mean(lift_distribution[:, 5])
+        # cl = lift_distribution[:, 5]
+        # clabs = np.abs(cl)
+        # CL = np.mean(cl)
+        # output = CL
+        
+        if mode == 'theta':
+            output = np.mean(theta_distribution[:, 0])
+        elif mode == 'theta_dot':
+            output = np.mean(theta_distribution[:, 1])
+        elif mode == 'theta_ddot':
+            output = np.mean(theta_distribution[:, 2])
+        elif mode == 'pos':
+            output = np.mean(lift_distribution[:, 2])
+        elif mode == 'pos_dot':
+            output = np.mean(lift_distribution[:, 6])
+        elif mode == 'pos_ddot':
+            output = np.mean(lift_distribution[:, 7])
+        elif mode == 'cl':
+            output = np.mean(lift_distribution[:, 5])
+        elif mode == 'tip_pos':
+            output = struct_tstep.pos[N_nodes//2-1, 2]
+        elif mode == 'tip_pos_dot':
+            output = struct_tstep.pos_dot[N_nodes//2-1, 2]
+        elif mode == 'tip_pos_ddot':
+            output = struct_tstep.pos_ddot[N_nodes//2-1, 2]
+        elif mode == 'tip_theta':
+            output = struct_tstep.psi[N_elems//2-1, -1, 1]
+        elif mode == 'tip_theta_dot':
+            output = struct_tstep.psi_dot[N_elems//2-1, -1, 1]
+        elif mode == 'tip_theta_ddot':
+            output = struct_tstep.psi_ddot[N_elems//2-1, -1, 1]
+        else:
+            raise NotImplementedError(
+                f"input_type {mode} is not yet implemented in extract_time_history()") 
+        
+        # output = np.sign(CL) * np.mean(clabs)
         # print(lift_distribution[:, -1].shape, (self.data.aero.aero_dict['control_surface'] != 0).shape)
         # output = np.sqrt(np.abs(output)) * np.sign(output)
 
         return output
+    
 
     def controller_wrapper(self,
                            required_input,
@@ -499,14 +712,30 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                            lag_index,
                            mode,
                            ):
-        order = 10
-        freq = 30
-        if mode == 'low' or mode == 'lp':
-            controller = self.controller_implementation_lp
-        elif mode == 'high' or mode == 'hp':
-            controller = self.controller_implementation_hp
+        if mode == 'tip_theta':
+            controller = self.controller_implementation_tip_theta
+            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+                current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
+        elif mode == 'tip_pos':
+            controller = self.controller_implementation_tip_pos
+        elif mode == 'theta':
+            controller = self.controller_implementation_theta
+            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            # if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+            #     current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same')
+        elif mode == 'theta_dot':
+            controller = self.controller_implementation_theta_dot
+            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+                current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
+        elif mode == 'theta_ddot':
+            controller = self.controller_implementation_theta_ddot
+            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+                current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         else:
-            raise NotImplementedError('controller filter mode is either low/lp or high/hp')
+            raise NotImplementedError('controller modes available are tip_theta, tip_pos, theta, theta_dot, and theta_ddot')
         
         controller.set_point(required_input[i_current - 1])        
         control_param, detailed_control_param = controller(current_input[lag_index - 1],
@@ -520,30 +749,49 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         return (control_param, detailed_control_param)
     
     
-    def filter(self, data, mode=None, order=10, freq=30):
-        # if mode == 'low' or mode == 'lp':
-        #     b, a = sig.butter(order, freq, btype='lowpass', analog=False, fs=(1/self.settings['dt']))
-        # elif mode == 'high' or mode == 'hp':
-        #     b, a = sig.butter(order, freq, btype='highpass', analog=False, fs=(1/self.settings['dt']))
-        # try:
-        #     data = sig.filtfilt(b, a, data)
-        # except:
-        #     data = sig.lfilter(b, a, data)
+    def filter(self, data, mode=None, order=9, **kwargs):
         
-        data_fft = scipy.fft.fft(data, n=len(data))
-        fft_freq = scipy.fft.fftfreq(data_fft.shape[0], d=self.settings['dt'])
+        lp_freq0 = kwargs.get('lp_freq0', self.settings['cutoff_freq0'][0])
+        lp_freq1 = kwargs.get('lp_freq1', self.settings['cutoff_freq0'][1])
+        hp_freq0 = kwargs.get('hp_freq0', self.settings['cutoff_freq1'][0])
+        hp_freq1 = kwargs.get('hp_freq1', self.settings['cutoff_freq1'][1])
         
-        data_lp = data_fft.copy()
-        data_hp = data_fft.copy()
+        if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+            data = np.convolve(data, np.ones(self.settings['kernel_size'])) / self.settings['kernel_size']
         
-        
-        data_lp[np.abs(fft_freq) > self.settings['cutoff_freq']] = 0
-        data_hp[np.abs(fft_freq) <= self.settings['cutoff_freq']] = 0
-        
-        data_lp = scipy.fft.ifft(data_lp, n=data_fft.shape[0])
-        data_hp = scipy.fft.ifft(data_hp, n=data_fft.shape[0])
-        
-        return data_lp.real, data_hp.real
+        if mode != 'fft':
+            bl = sig.firwin(order, lp_freq1, pass_zero='lowpass', fs=(1/self.settings['dt']))
+            bh = sig.firwin(order, hp_freq0, pass_zero='highpass', fs=(1/self.settings['dt']))
+            try:
+                data_lp = sig.filtfilt(bl, 1, data)
+                data_hp = sig.filtfilt(bh, 1, data)
+            except:
+                data_lp = sig.lfilter(bl, 1, data)
+                data_hp = sig.lfilter(bh, 1, data)
+
+        else:
+            data_fft = scipy.fft.fft(data, n=len(data))
+            fft_freq = scipy.fft.fftfreq(data_fft.shape[0], d=self.settings['dt'])
+            
+            # print(fft_freq)
+            
+            data_lp = data_fft.copy()
+            data_hp = data_fft.copy()
+
+            
+            
+            data_lp[np.abs(fft_freq) <= lp_freq0] = 0
+            data_lp[np.abs(fft_freq) > lp_freq1] = 0
+            # print(data_lp)
+            
+            data_hp[np.abs(fft_freq) <= hp_freq0] = 0
+            data_hp[np.abs(fft_freq) > hp_freq1] = 0
+            # print(data_hp)
+            
+            data_lp = scipy.fft.ifft(data_lp, n=data_fft.shape[0]).real
+            data_hp = scipy.fft.ifft(data_hp, n=data_fft.shape[0]).real
+            
+        return data_lp, data_hp
 
     def __exit__(self, *args):
         self.log.close()
