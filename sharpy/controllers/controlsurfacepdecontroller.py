@@ -725,12 +725,12 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                            ):
         if mode == 'tip_theta':
             controller = self.controller_implementation_tip_theta
-            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             # if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
             #     current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'tip_theta_dot':
             controller = self.controller_implementation_tip_theta_dot
-            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
                 current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'tip_theta_ddot':
@@ -740,22 +740,22 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                 current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'tip_pos':
             controller = self.controller_implementation_tip_pos
-            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             # if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
             #     current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'theta':
             controller = self.controller_implementation_theta
-            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             # if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
             #     current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same')
         elif mode == 'theta_dot':
             controller = self.controller_implementation_theta_dot
-            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
                 current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'theta_ddot':
             controller = self.controller_implementation_theta_ddot
-            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
                 current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         else:
