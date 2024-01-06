@@ -78,6 +78,7 @@ class Aerogrid(object):
         # allocating initial grid storage
         self.ini_info = AeroTimeStepInfo(self.aero_dimensions,
                                          self.aero_dimensions_star)
+        self.cs_nodes = [i[0, :, :] for i in self.ini_info.zeta]
 
         # load airfoils db
         # for i_node in range(self.n_node):
@@ -344,7 +345,8 @@ class Aerogrid(object):
                     ielem_in_surf = i_elem - np.sum(self.surface_distribution < i_surf)
                     node_info['user_defined_m_distribution'] = self.aero_dict['user_defined_m_distribution'][str(i_surf)][:, ielem_in_surf, i_local_node]
                 (aero_tstep.zeta[i_surf][:, :, i_n],
-                 aero_tstep.zeta_dot[i_surf][:, :, i_n]) = (
+                 aero_tstep.zeta_dot[i_surf][:, :, i_n],
+                 self.cs_nodes[i_surf][:, i_n]) = (
                     generate_strip(node_info,
                                    self.airfoil_db,
                                    aero_settings['aligned_grid'],
@@ -492,6 +494,8 @@ def generate_strip(node_info, airfoil_db, aligned_grid,
     strip_coordinates_a_frame = np.zeros((3, node_info['M'] + 1), dtype=ct.c_double)
     strip_coordinates_b_frame = np.zeros((3, node_info['M'] + 1), dtype=ct.c_double)
     zeta_dot_a_frame = np.zeros((3, node_info['M'] + 1), dtype=ct.c_double)
+    
+    cs_nodes = np.zeros(node_info['M']+1)
 
     # airfoil coordinates
     # we are going to store everything in the x-z plane of the b
@@ -525,6 +529,7 @@ def generate_strip(node_info, airfoil_db, aligned_grid,
                 b_frame_hinge_coords =  node_info['control_surface']['hinge_coords']
 
         for i_M in range(node_info['M'] - node_info['control_surface']['chord'], node_info['M'] + 1):
+            cs_nodes[i_M] = 1
             relative_coords = strip_coordinates_b_frame[:, i_M] - b_frame_hinge_coords
             # rotate the control surface
             relative_coords = np.dot(algebra.rotation3d_x(-node_info['control_surface']['deflection']),
@@ -620,4 +625,4 @@ def generate_strip(node_info, airfoil_db, aligned_grid,
         zeta_dot_a_frame[:, i_M] = np.dot(node_info['cga'],
                                           zeta_dot_a_frame[:, i_M])
 
-    return strip_coordinates_a_frame, zeta_dot_a_frame
+    return strip_coordinates_a_frame, zeta_dot_a_frame, cs_nodes

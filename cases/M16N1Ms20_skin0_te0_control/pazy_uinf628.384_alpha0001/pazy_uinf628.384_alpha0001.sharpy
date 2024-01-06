@@ -112,14 +112,14 @@ u_inf_direction = 1.0, 0.0, 0.0
 aileron = ControlSurfacePdeController
 [[controller_settings]]
 [[[aileron]]]
-P = 0, 0, 6.25, 0.05, 0.0001
+P = 0, 0, 1, 0, 0
 I = 0, 0, 0, 0, 0
-D = 0, 0, 0, 0, 5e-06
+D = 0, 0, 0, 0, 0
 D2 = 0, 0, 0, 0, 0
-P_rampup_steps = 20
-I_rampup_steps = 20
-D_rampup_steps = 100
-D2_rampup_steps = 100
+P_rampup_steps = 1
+I_rampup_steps = 1
+D_rampup_steps = 1
+D2_rampup_steps = 1
 order = 2
 dt = 9.946153082633378e-05
 Kpos = 0
@@ -128,7 +128,7 @@ cutoff_freq1 = 32, inf
 controlled_surfaces = 0, 1
 write_controller_log = True
 smoothing = True
-kernel_size = 1437
+kernel_size = 1
 time_history_input_file = ./output/controlled/pazy_M16N1Ms20_alpha0001_skin0_te0_control/controller_62_84/input.txt
 controller_log_route = ./output/controlled/pazy_M16N1Ms20_alpha0001_skin0_te0_control/controller_62_84/
 controller_noise = False
@@ -138,5 +138,5 @@ error_pow = 1
 rho = 1.225
 [[[[controller_noise_settings]]]]
 noise_mode = amplitude
-max_percentage = 10
-max_amplitude = 0.5235987755982988
+max_percentage = 100
+max_amplitude = 0.0008726646259971648

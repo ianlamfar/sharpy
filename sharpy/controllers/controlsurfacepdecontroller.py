@@ -253,8 +253,6 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                                                            self.settings['order'],
                                                            )
         self.tip_pos_input_history = list()
-        # self.tip_theta_pos_input_history = list()
-        # self.tip_theta_ddot_input_history = list()
         
         self.controller_implementation_theta = control_utils.PDE(self.settings['P'][2],
                                                            self.settings['I'][2],
@@ -367,7 +365,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         
         _control_command_tiprdd, _detail_tiprdd = self.controller_wrapper(
             required_input=self.prescribed_input_time_history,
-            current_input=self.tip_theta_dot_input_history,
+            current_input=self.tip_theta_ddot_input_history,
             control_param={'P_steps': self.settings['D2_rampup_steps'],
                            'I_steps': self.settings['D2_rampup_steps'],
                            'D_steps': self.settings['D2_rampup_steps'],
@@ -379,7 +377,8 @@ class ControlSurfacePdeController(controller_interface.BaseController):
             )
         
         control_command_tipr += _control_command_tiprd + _control_command_tiprdd
-        detail_tipr[-2:] = [_detail_tiprd[0], _detail_tiprdd[0]]
+        detail_tipr[-2] = _detail_tiprd[0]
+        detail_tipr[-1] = _detail_tiprdd[0]
         
         control_command_tipz, detail_tipz = self.controller_wrapper(
             required_input=np.zeros_like(self.prescribed_input_time_history),
@@ -444,8 +443,7 @@ class ControlSurfacePdeController(controller_interface.BaseController):
             noise_mode = noise_settings['noise_mode']  # either max percentage (multiply to signal) or max amplitude (add to signal)
             noise_percentage = float(noise_settings['max_percentage'])  # max percentage of noise with respect to signal at that timestep
             noise_amplitude = float(noise_settings['max_amplitude'])  # max amplitude of noise
-            if noise_percentage > 1:  # divide by 100 for values in percentage scale
-                noise_percentage /= 100
+            noise_percentage /= 100
 
             if noise_mode == 'percentage':
                 noise = np.random.normal(0, noise_percentage)
@@ -565,10 +563,14 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         control_tdd = np.degrees(detail_tdd)
         cap_control = np.degrees(control_command)
         
+        cmd_tipr = np.degrees(control_command_tipr)
+        cmd_tipz = np.degrees(control_command_tipz)
+        cmd_t = np.degrees(control_command_t + control_command_td + control_command_tdd)
+        
         print(f'PDEControl -- error: {error:+.4e}, raw: {raw:+.4f}, capped: {cap_control:+.4f}')
-        if self.lp_active: print(f'θt -- error: {error_tipr:+.4e}, [{control_tipr[0]:+.4f}P|{control_tipr[1]:+.4f}I|{control_tipr[2]:+.4f}D|{control_tipr[3]:+.4f}D2]')
-        if self.hp_active: print(f'zt -- error: {error_tipz:+.4e}, [{control_tipz[0]:+.4f}P|{control_tipz[1]:+.4f}I|{control_tipz[2]:+.4f}D|{control_tipz[3]:+.4f}D2]')
-        if self.t_active: print(f'∫θ -- error: {error_t:+.4e}, [{control_t[0]:+.4f}P|{control_t[1]:+.4f}I|{control_td[0]:+.4f}D|{control_tdd[0]:+.4f}D²|{control_tdd[2]:+.4f}D³|{control_tdd[3]:+.4f}D⁴]')
+        if self.lp_active: print(f'θt -- error: {error_tipr:+.4e}, [{cmd_tipr:+.4f}Σ||{control_tipr[0]:+.4f}P|{control_tipr[1]:+.4f}I|{control_tipr[2]:+.4f}D|{control_tipr[3]:+.4f}D²]')
+        if self.hp_active: print(f'zt -- error: {error_tipz:+.4e}, [{cmd_tipz:+.4f}Σ||{control_tipz[0]:+.4f}P|{control_tipz[1]:+.4f}I|{control_tipz[2]:+.4f}D|{control_tipz[3]:+.4f}D²]')
+        if self.t_active: print(f'∫θ -- error: {error_t:+.4e}, [{cmd_t:+.4f}Σ||{control_t[0]:+.4f}P|{control_t[1]:+.4f}I|{control_td[0]:+.4f}D|{control_tdd[0]:+.4f}D²|{control_tdd[2]:+.4f}D³|{control_tdd[3]:+.4f}D⁴]')
         # if self.td_active: print(f'T1 -- error: {error_td:+.4e}, [{control_td[0]:+.4f}P|{control_td[1]:+.4f}I|{control_td[2]:+.4f}D|{control_td[3]:+.4f}D2]')
         # if self.tdd_active: print(f'T2 -- error: {error_tdd:+.4e}, [{control_tdd[0]:+.4f}P|{control_tdd[1]:+.4f}I|{control_tdd[2]:+.4f}D|{control_tdd[3]:+.4f}D2]')
         
@@ -581,8 +583,17 @@ class ControlSurfacePdeController(controller_interface.BaseController):
         lift = 0
         output = np.sum(lift)
         
+        not_cs = [np.expand_dims((i != 1), 0) for i in self.data.aero.cs_nodes]
+        
+        forces_excl_cs = [aero_tstep.forces[i] * not_cs[i] for i in range(aero_tstep.n_surf)]
+        force_diff = [aero_tstep.forces[i] - forces_excl_cs[i] for i in range(aero_tstep.n_surf)]
+        
+        dyn_forces_excl_cs = [aero_tstep.dynamic_forces[i] * not_cs[i] for i in range(aero_tstep.n_surf)]
+        dyn_force_diff = [aero_tstep.dynamic_forces[i] - dyn_forces_excl_cs[i] for i in range(aero_tstep.n_surf)]
+
         forces = mapping.aero2struct_force_mapping(
             aero_tstep.forces + aero_tstep.dynamic_forces,
+            # forces_excl_cs + dyn_forces_excl_cs,
             self.data.aero.struct2aero_mapping,
             aero_tstep.zeta,
             struct_tstep.pos,
@@ -714,24 +725,37 @@ class ControlSurfacePdeController(controller_interface.BaseController):
                            ):
         if mode == 'tip_theta':
             controller = self.controller_implementation_tip_theta
-            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+            #     current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
+        elif mode == 'tip_theta_dot':
+            controller = self.controller_implementation_tip_theta_dot
+            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+                current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
+        elif mode == 'tip_theta_ddot':
+            controller = self.controller_implementation_tip_theta_ddot
+            # current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
                 current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'tip_pos':
             controller = self.controller_implementation_tip_pos
+            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
+            # if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
+            #     current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'theta':
             controller = self.controller_implementation_theta
-            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             # if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
             #     current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same')
         elif mode == 'theta_dot':
             controller = self.controller_implementation_theta_dot
-            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
                 current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         elif mode == 'theta_ddot':
             controller = self.controller_implementation_theta_ddot
-            current_input = self.filter(current_input, 'lp', lp_freq0=30, lp_freq1=40)[0]
+            current_input = self.filter(current_input, 'lp', lp_freq0=0.1, lp_freq1=40)[0]
             if self.settings['smoothing'] and self.settings['kernel_size'] > 1:
                 current_input = np.convolve(current_input, np.ones(self.settings['kernel_size']), 'same') / self.settings['kernel_size']
         else:
